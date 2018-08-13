@@ -133,12 +133,15 @@ class ProjectController extends BaseController
             $lastClientId = false;
             $lastProjectId = false;
             $projects = Project::scope($ids)
-                ->with(['client', 'tasks' => function ($query) {
-                    $query->whereNull('invoice_id');
-                }])
+                ->with([
+                    'client',
+                    'tasks' => function ($query) {
+                        $query->whereNull('invoice_id');
+                    }
+                ])
                 ->get();
             foreach ($projects as $project) {
-                if (! $clientPublicId) {
+                if (!$clientPublicId) {
                     $clientPublicId = $project->client->public_id;
                 }
                 if ($lastClientId && $lastClientId != $project->client_id) {

@@ -67,18 +67,21 @@ class ClientDatatable extends EntityDatatable
             [
                 trans('texts.edit_client'),
                 function ($model) {
-                    if(Auth::user()->can('edit', [ENTITY_CLIENT, $model]))
+                    if (Auth::user()->can('edit', [ENTITY_CLIENT, $model])) {
                         return URL::to("clients/{$model->public_id}/edit");
-                    elseif(Auth::user()->can('view', [ENTITY_CLIENT, $model]))
+                    } elseif (Auth::user()->can('view', [ENTITY_CLIENT, $model])) {
                         return URL::to("clients/{$model->public_id}");
+                    }
                 },
             ],
             [
-                '--divider--', function () {
+                '--divider--',
+                function () {
                     return false;
                 },
                 function ($model) {
-                    return Auth::user()->can('edit', [ENTITY_CLIENT, $model]) && (Auth::user()->can('create', ENTITY_TASK) || Auth::user()->can('create', ENTITY_INVOICE));
+                    return Auth::user()->can('edit', [ENTITY_CLIENT, $model]) && (Auth::user()->can('create',
+                                ENTITY_TASK) || Auth::user()->can('create', ENTITY_INVOICE));
                 },
             ],
             [
@@ -109,11 +112,15 @@ class ClientDatatable extends EntityDatatable
                 },
             ],
             [
-                '--divider--', function () {
+                '--divider--',
+                function () {
                     return false;
                 },
                 function ($model) {
-                    return (Auth::user()->can('create', ENTITY_TASK) || Auth::user()->can('create', ENTITY_INVOICE)) && (Auth::user()->can('create', ENTITY_PAYMENT) || Auth::user()->can('create', ENTITY_CREDIT) || Auth::user()->can('create', ENTITY_EXPENSE));
+                    return (Auth::user()->can('create', ENTITY_TASK) || Auth::user()->can('create',
+                                ENTITY_INVOICE)) && (Auth::user()->can('create',
+                                ENTITY_PAYMENT) || Auth::user()->can('create',
+                                ENTITY_CREDIT) || Auth::user()->can('create', ENTITY_EXPENSE));
                 },
             ],
             [

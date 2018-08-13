@@ -16,10 +16,11 @@ class ExpenseCategoryDatatable extends EntityDatatable
             [
                 'name',
                 function ($model) {
-                    if (Auth::user()->can('edit', [ENTITY_EXPENSE_CATEGORY, $model]))
+                    if (Auth::user()->can('edit', [ENTITY_EXPENSE_CATEGORY, $model])) {
                         return link_to("expense_categories/{$model->public_id}/edit", $model->category)->toHtml();
-                    else
+                    } else {
                         return $model->category;
+                    }
 
                 },
             ],

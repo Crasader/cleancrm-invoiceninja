@@ -22,7 +22,7 @@ class PurgeAccountData extends Job
         $user = Auth::user();
         $account = $user->account;
 
-        if (! $user->is_admin) {
+        if (!$user->is_admin) {
             throw new Exception(trans('texts.forbidden'));
         }
 

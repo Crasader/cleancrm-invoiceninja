@@ -7,7 +7,7 @@ use App\Models\VendorContact;
 // vendor
 class VendorContactTransformer extends EntityTransformer
 {
-		/**
+    /**
      * @SWG\Property(property="id", type="integer", example=1, readOnly=true)
      * @SWG\Property(property="first_name", type="string", example="Luke")
      * @SWG\Property(property="last_name", type="string", example="Smith")
@@ -20,13 +20,13 @@ class VendorContactTransformer extends EntityTransformer
     public function transform(VendorContact $contact)
     {
         return array_merge($this->getDefaults($contact), [
-            'id' => (int) $contact->public_id,
+            'id' => (int)$contact->public_id,
             'first_name' => $contact->first_name ?: '',
             'last_name' => $contact->last_name ?: '',
             'email' => $contact->email ?: '',
             'updated_at' => $this->getTimestamp($contact->updated_at),
             'archived_at' => $this->getTimestamp($contact->deleted_at),
-            'is_primary' => (bool) $contact->is_primary,
+            'is_primary' => (bool)$contact->is_primary,
             'phone' => $contact->phone ?: '',
         ]);
     }

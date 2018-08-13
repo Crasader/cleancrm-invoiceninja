@@ -37,7 +37,7 @@ class AppServiceProvider extends ServiceProvider
         });
 
         Form::macro('image_data', function ($image, $contents = false) {
-            if (! $contents) {
+            if (!$contents) {
                 $contents = file_get_contents($image);
             } else {
                 $contents = $image;
@@ -48,26 +48,26 @@ class AppServiceProvider extends ServiceProvider
 
         Form::macro('nav_link', function ($url, $text) {
             //$class = ( Request::is($url) || Request::is($url.'/*') || Request::is($url2.'/*') ) ? ' class="active"' : '';
-            $class = (Request::is($url) || Request::is($url.'/*')) ? ' class="active"' : '';
-            $title = trans("texts.$text")  . Utils::getProLabel($text);
+            $class = (Request::is($url) || Request::is($url . '/*')) ? ' class="active"' : '';
+            $title = trans("texts.$text") . Utils::getProLabel($text);
 
-            return '<li'.$class.'><a href="'.URL::to($url).'">'.$title.'</a></li>';
+            return '<li' . $class . '><a href="' . URL::to($url) . '">' . $title . '</a></li>';
         });
 
         Form::macro('tab_link', function ($url, $text, $active = false) {
             $class = $active ? ' class="active"' : '';
 
-            return '<li'.$class.'><a href="'.URL::to($url).'" data-toggle="tab">'.$text.'</a></li>';
+            return '<li' . $class . '><a href="' . URL::to($url) . '" data-toggle="tab">' . $text . '</a></li>';
         });
 
         Form::macro('menu_link', function ($type) {
-            $types = $type.'s';
+            $types = $type . 's';
             $Type = ucfirst($type);
             $Types = ucfirst($types);
-            $class = (Request::is($types) || Request::is('*'.$type.'*')) && ! Request::is('*settings*') ? ' active' : '';
+            $class = (Request::is($types) || Request::is('*' . $type . '*')) && !Request::is('*settings*') ? ' active' : '';
 
-            return '<li class="dropdown '.$class.'">
-                    <a href="'.URL::to($types).'" class="dropdown-toggle">'.trans("texts.$types").'</a>
+            return '<li class="dropdown ' . $class . '">
+                    <a href="' . URL::to($types) . '" class="dropdown-toggle">' . trans("texts.$types") . '</a>
                    </li>';
         });
 
@@ -77,22 +77,22 @@ class AppServiceProvider extends ServiceProvider
 
         Form::macro('emailViewButton', function ($link = '#', $entityType = ENTITY_INVOICE) {
             return view('partials.email_button')
-                        ->with([
-                            'link' => $link,
-                            'field' => "view_{$entityType}",
-                            'color' => '#0b4d78',
-                        ])
-                        ->render();
+                ->with([
+                    'link' => $link,
+                    'field' => "view_{$entityType}",
+                    'color' => '#0b4d78',
+                ])
+                ->render();
         });
 
         Form::macro('emailPaymentButton', function ($link = '#', $label = 'pay_now') {
             return view('partials.email_button')
-                        ->with([
-                            'link' => $link,
-                            'field' => $label,
-                            'color' => '#36c157',
-                        ])
-                        ->render();
+                ->with([
+                    'link' => $link,
+                    'field' => $label,
+                    'color' => '#36c157',
+                ])
+                ->render();
         });
 
         Form::macro('breadcrumbs', function ($status = false) {
@@ -118,27 +118,27 @@ class AppServiceProvider extends ServiceProvider
             $crumbs = array_values($crumbs);
             for ($i = 0; $i < count($crumbs); $i++) {
                 $crumb = trim($crumbs[$i]);
-                if (! $crumb) {
+                if (!$crumb) {
                     continue;
                 }
                 if ($crumb == 'company') {
                     return '';
                 }
 
-                if(! Utils::isNinjaProd()) {
+                if (!Utils::isNinjaProd()) {
                     // check the crumb against  all defined base-routes in enabled modules
                     // to get the correct module name for translation resolution
                     $modules = \Module::enabled();
 
-                    foreach($modules as $module) {
-                        if($crumb == $module->get('base-route', '')) {
+                    foreach ($modules as $module) {
+                        if ($crumb == $module->get('base-route', '')) {
                             $crumb = $module->getLowerName();
                             break;
                         }
                     }
                 }
 
-                if (! Utils::isNinjaProd() && $module = \Module::find($crumb)) {
+                if (!Utils::isNinjaProd() && $module = \Module::find($crumb)) {
                     $name = mtrans($crumb);
                 } else {
                     $name = trans("texts.$crumb");
@@ -150,7 +150,7 @@ class AppServiceProvider extends ServiceProvider
                     if (count($crumbs) > 2 && $crumbs[1] == 'proposals' && $crumb != 'proposals') {
                         $crumb = 'proposals/' . $crumb;
                     }
-                    $str .= '<li>'.link_to($crumb, $name).'</li>';
+                    $str .= '<li>' . link_to($crumb, $name) . '</li>';
                 }
             }
 
@@ -191,7 +191,7 @@ class AppServiceProvider extends ServiceProvider
             array_multisort($value);
             foreach ($value as $timeLog) {
                 list($startTime, $endTime) = $timeLog;
-                if (! $endTime) {
+                if (!$endTime) {
                     continue;
                 }
                 if ($startTime < $lastTime || $startTime > $endTime) {
@@ -207,7 +207,7 @@ class AppServiceProvider extends ServiceProvider
         });
 
         Validator::extend('has_counter', function ($attribute, $value, $parameters) {
-            if (! $value) {
+            if (!$value) {
                 return true;
             }
 
@@ -215,14 +215,15 @@ class AppServiceProvider extends ServiceProvider
                 return true;
             }
 
-            return ((strstr($value, '{$idNumber}') !== false || strstr($value, '{$clientIdNumber}') != false) && (strstr($value, '{$clientCounter}')));
+            return ((strstr($value, '{$idNumber}') !== false || strstr($value,
+                        '{$clientIdNumber}') != false) && (strstr($value, '{$clientCounter}')));
         });
 
         Validator::extend('valid_invoice_items', function ($attribute, $value, $parameters) {
             $total = 0;
             foreach ($value as $item) {
-                $qty = ! empty($item['qty']) ? Utils::parseFloat($item['qty']) : 1;
-                $cost = ! empty($item['cost']) ? Utils::parseFloat($item['cost']) : 1;
+                $qty = !empty($item['qty']) ? Utils::parseFloat($item['qty']) : 1;
+                $cost = !empty($item['cost']) ? Utils::parseFloat($item['cost']) : 1;
                 $total += $qty * $cost;
             }
 
@@ -230,7 +231,27 @@ class AppServiceProvider extends ServiceProvider
         });
 
         Validator::extend('valid_subdomain', function ($attribute, $value, $parameters) {
-            return ! in_array($value, ['www', 'app', 'mail', 'admin', 'blog', 'user', 'contact', 'payment', 'payments', 'billing', 'invoice', 'business', 'owner', 'info', 'ninja', 'docs', 'doc', 'documents', 'download']);
+            return !in_array($value, [
+                'www',
+                'app',
+                'mail',
+                'admin',
+                'blog',
+                'user',
+                'contact',
+                'payment',
+                'payments',
+                'billing',
+                'invoice',
+                'business',
+                'owner',
+                'info',
+                'ninja',
+                'docs',
+                'doc',
+                'documents',
+                'download'
+            ]);
         });
     }
 

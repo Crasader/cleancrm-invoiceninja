@@ -42,6 +42,14 @@ class ResetPasswordController extends Controller
         //Config::set('auth.defaults.passwords', 'client');
     }
 
+    public function showResetForm(Request $request, $token = null)
+    {
+        return view('auth.passwords.reset')->with([
+            'token' => $token,
+            'url' => '/client/password/reset'
+        ]);
+    }
+
     protected function broker()
     {
         return Password::broker('clients');
@@ -50,14 +58,6 @@ class ResetPasswordController extends Controller
     protected function guard()
     {
         return auth()->guard('client');
-    }
-
-    public function showResetForm(Request $request, $token = null)
-    {
-        return view('auth.passwords.reset')->with([
-            'token' => $token,
-            'url' => '/client/password/reset'
-        ]);
     }
 
 }

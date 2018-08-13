@@ -14,7 +14,7 @@ class ConvertProposalToPdf extends Job
 
     public function handle()
     {
-        if (! env('PHANTOMJS_CLOUD_KEY') && ! env('PHANTOMJS_BIN_PATH')) {
+        if (!env('PHANTOMJS_CLOUD_KEY') && !env('PHANTOMJS_BIN_PATH')) {
             return false;
         }
 
@@ -31,7 +31,7 @@ class ConvertProposalToPdf extends Job
         try {
             $pdf = CurlUtils::renderPDF($phantomjsLink, $filename);
 
-            if (! $pdf && ($key = env('PHANTOMJS_CLOUD_KEY'))) {
+            if (!$pdf && ($key = env('PHANTOMJS_CLOUD_KEY'))) {
                 $url = "http://api.phantomjscloud.com/api/browser/v2/{$key}/?request=%7Burl:%22{$link}?phantomjs=true%26phantomjs_secret={$phantomjsSecret}%22,renderType:%22pdf%22%7D";
                 $pdf = CurlUtils::get($url);
             }
@@ -40,7 +40,7 @@ class ConvertProposalToPdf extends Job
             return false;
         }
 
-        if (! $pdf || strlen($pdf) < 200) {
+        if (!$pdf || strlen($pdf) < 200) {
             Utils::logError("PhantomJS - Invalid response {$phantomjsLink}: {$pdf}");
             return false;
         }

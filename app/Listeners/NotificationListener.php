@@ -45,25 +45,6 @@ class NotificationListener
     }
 
     /**
-     * @param $invoice
-     * @param $type
-     * @param null $payment
-     */
-    private function sendNotifications($invoice, $type, $payment = null, $notes = false)
-    {
-        foreach ($invoice->account->users as $user)
-        {
-            if ($user->{"notify_{$type}"}) {
-                dispatch(new SendNotificationEmail($user, $invoice, $type, $payment, $notes));
-            }
-
-            if ($payment && $user->slack_webhook_url) {
-                $user->notify(new PaymentCreated($payment, $invoice));
-            }
-        }
-    }
-
-    /**
      * @param InvoiceWasEmailed $event
      */
     public function emailedInvoice(InvoiceWasEmailed $event)
@@ -86,7 +67,7 @@ class NotificationListener
      */
     public function viewedInvoice(InvoiceInvitationWasViewed $event)
     {
-        if ( ! floatval($event->invoice->balance)) {
+        if (!floatval($event->invoice->balance)) {
             return;
         }
 
@@ -122,7 +103,7 @@ class NotificationListener
     public function createdPayment(PaymentWasCreated $event)
     {
         // only send emails for online payments
-        if ( ! $event->payment->account_gateway_id) {
+        if (!$event->payment->account_gateway_id) {
             return;
         }
 
@@ -130,6 +111,24 @@ class NotificationListener
         $this->sendNotifications($event->payment->invoice, 'paid', $event->payment);
 
         $this->pushService->sendNotification($event->payment->invoice, 'paid');
+    }
+
+    /**
+     * @param $invoice
+     * @param $type
+     * @param null $payment
+     */
+    private function sendNotifications($invoice, $type, $payment = null, $notes = false)
+    {
+        foreach ($invoice->account->users as $user) {
+            if ($user->{"notify_{$type}"}) {
+                dispatch(new SendNotificationEmail($user, $invoice, $type, $payment, $notes));
+            }
+
+            if ($payment && $user->slack_webhook_url) {
+                $user->notify(new PaymentCreated($payment, $invoice));
+            }
+        }
     }
 
 }

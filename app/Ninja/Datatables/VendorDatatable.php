@@ -61,11 +61,13 @@ class VendorDatatable extends EntityDatatable
                 },
             ],
             [
-                '--divider--', function () {
+                '--divider--',
+                function () {
                     return false;
                 },
                 function ($model) {
-                    return Auth::user()->can('edit', [ENTITY_VENDOR, $model]) && Auth::user()->can('create', ENTITY_EXPENSE);
+                    return Auth::user()->can('edit', [ENTITY_VENDOR, $model]) && Auth::user()->can('create',
+                            ENTITY_EXPENSE);
                 },
 
             ],

@@ -90,8 +90,9 @@ class GenericEntityPolicy
 
     public static function edit(User $user, $item)
     {
-        if (! static::checkModuleEnabled($user, $item))
+        if (!static::checkModuleEnabled($user, $item)) {
             return false;
+        }
 
 
         $entityType = is_string($item) ? $item : $item->getEntityType();
@@ -111,10 +112,9 @@ class GenericEntityPolicy
     }
 
 
-
     private static function className($entityType)
     {
-        if (! Utils::isNinjaProd()) {
+        if (!Utils::isNinjaProd()) {
             if ($module = \Module::find($entityType)) {
                 return "Modules\\{$module->getName()}\\Policies\\{$module->getName()}Policy";
             }

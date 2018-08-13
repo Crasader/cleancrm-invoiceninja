@@ -15,20 +15,12 @@ class PaymentTermService extends BaseService
      * PaymentTermService constructor.
      *
      * @param PaymentTermRepository $paymentTermRepo
-     * @param DatatableService      $datatableService
+     * @param DatatableService $datatableService
      */
     public function __construct(PaymentTermRepository $paymentTermRepo, DatatableService $datatableService)
     {
         $this->paymentTermRepo = $paymentTermRepo;
         $this->datatableService = $datatableService;
-    }
-
-    /**
-     * @return PaymentTermRepository
-     */
-    protected function getRepo()
-    {
-        return $this->paymentTermRepo;
     }
 
     /**
@@ -73,5 +65,13 @@ class PaymentTermService extends BaseService
                 },
             ],
         ];
+    }
+
+    /**
+     * @return PaymentTermRepository
+     */
+    protected function getRepo()
+    {
+        return $this->paymentTermRepo;
     }
 }

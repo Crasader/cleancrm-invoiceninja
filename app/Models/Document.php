@@ -11,42 +11,35 @@ use Illuminate\Support\Facades\Storage;
 class Document extends EntityModel
 {
     /**
-     * @return mixed
-     */
-    public function getEntityType()
-    {
-        return ENTITY_DOCUMENT;
-    }
-
-    /**
-     * @var array
-     */
-    protected $fillable = [
-        'invoice_id',
-        'expense_id',
-        'is_default',
-    ];
-
-    /**
      * @var array
      */
     public static $extraExtensions = [
         'jpg' => 'jpeg',
         'tif' => 'tiff',
     ];
-
     /**
      * @var array
      */
     public static $allowedMimes = [// Used by Dropzone.js; does not affect what the server accepts
-        'image/png', 'image/jpeg', 'image/tiff', 'application/pdf', 'image/gif', 'image/vnd.adobe.photoshop', 'text/plain',
+        'image/png',
+        'image/jpeg',
+        'image/tiff',
+        'application/pdf',
+        'image/gif',
+        'image/vnd.adobe.photoshop',
+        'text/plain',
         'application/msword',
-        'application/excel', 'application/vnd.ms-excel', 'application/x-excel', 'application/x-msexcel',
+        'application/excel',
+        'application/vnd.ms-excel',
+        'application/x-excel',
+        'application/x-msexcel',
         'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/postscript', 'image/svg+xml',
-        'application/vnd.openxmlformats-officedocument.presentationml.presentation', 'application/vnd.ms-powerpoint',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'application/postscript',
+        'image/svg+xml',
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+        'application/vnd.ms-powerpoint',
     ];
-
     /**
      * @var array
      */
@@ -97,6 +90,68 @@ class Document extends EntityModel
             'mime' => 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
         ],
     ];
+    /**
+     * @var array
+     */
+    protected $fillable = [
+        'invoice_id',
+        'expense_id',
+        'is_default',
+    ];
+
+    /**
+     * @param $path
+     * @param $disk
+     * @param bool $prioritizeSpeed
+     *
+     * @throws \OpenCloud\Common\Exceptions\NoNameError
+     *
+     * @return null|string
+     */
+    public static function getDirectFileUrl($path, $disk, $prioritizeSpeed = false)
+    {
+        $adapter = $disk->getAdapter();
+        $fullPath = $adapter->applyPathPrefix($path);
+
+        if ($adapter instanceof \League\Flysystem\AwsS3v3\AwsS3Adapter) {
+            $client = $adapter->getClient();
+            $command = $client->getCommand('GetObject', [
+                'Bucket' => $adapter->getBucket(),
+                'Key' => $fullPath,
+            ]);
+
+            return (string)$client->createPresignedRequest($command, '+10 minutes')->getUri();
+        } elseif (!$prioritizeSpeed // Rackspace temp URLs are slow, so we don't use them for previews
+            && $adapter instanceof \League\Flysystem\Rackspace\RackspaceAdapter) {
+            $secret = env('RACKSPACE_TEMP_URL_SECRET');
+            if ($secret) {
+                $object = $adapter->getContainer()->getObject($fullPath);
+
+                if (env('RACKSPACE_TEMP_URL_SECRET_SET')) {
+                    // Go ahead and set the secret too
+                    $object->getService()->getAccount()->setTempUrlSecret($secret);
+                }
+
+                $url = $object->getUrl();
+                $expiry = strtotime('+10 minutes');
+                $urlPath = urldecode($url->getPath());
+                $body = sprintf("%s\n%d\n%s", 'GET', $expiry, $urlPath);
+                $hash = hash_hmac('sha1', $body, $secret);
+
+                return sprintf('%s?temp_url_sig=%s&temp_url_expires=%d', $url, $hash, $expiry);
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getEntityType()
+    {
+        return ENTITY_DOCUMENT;
+    }
 
     /**
      * @param array $attributes
@@ -151,7 +206,7 @@ class Document extends EntityModel
      */
     public function getDisk()
     {
-        return Storage::disk(! empty($this->disk) ? $this->disk : env('DOCUMENT_FILESYSTEM', 'documents'));
+        return Storage::disk(!empty($this->disk) ? $this->disk : env('DOCUMENT_FILESYSTEM', 'documents'));
     }
 
     /**
@@ -176,52 +231,6 @@ class Document extends EntityModel
     public function getDirectPreviewUrl()
     {
         return $this->preview ? static::getDirectFileUrl($this->preview, $this->getDisk(), true) : null;
-    }
-
-    /**
-     * @param $path
-     * @param $disk
-     * @param bool $prioritizeSpeed
-     *
-     * @throws \OpenCloud\Common\Exceptions\NoNameError
-     *
-     * @return null|string
-     */
-    public static function getDirectFileUrl($path, $disk, $prioritizeSpeed = false)
-    {
-        $adapter = $disk->getAdapter();
-        $fullPath = $adapter->applyPathPrefix($path);
-
-        if ($adapter instanceof \League\Flysystem\AwsS3v3\AwsS3Adapter) {
-            $client = $adapter->getClient();
-            $command = $client->getCommand('GetObject', [
-                'Bucket' => $adapter->getBucket(),
-                'Key' => $fullPath,
-            ]);
-
-            return (string) $client->createPresignedRequest($command, '+10 minutes')->getUri();
-        } elseif (! $prioritizeSpeed // Rackspace temp URLs are slow, so we don't use them for previews
-                   && $adapter instanceof \League\Flysystem\Rackspace\RackspaceAdapter) {
-            $secret = env('RACKSPACE_TEMP_URL_SECRET');
-            if ($secret) {
-                $object = $adapter->getContainer()->getObject($fullPath);
-
-                if (env('RACKSPACE_TEMP_URL_SECRET_SET')) {
-                    // Go ahead and set the secret too
-                    $object->getService()->getAccount()->setTempUrlSecret($secret);
-                }
-
-                $url = $object->getUrl();
-                $expiry = strtotime('+10 minutes');
-                $urlPath = urldecode($url->getPath());
-                $body = sprintf("%s\n%d\n%s", 'GET', $expiry, $urlPath);
-                $hash = hash_hmac('sha1', $body, $secret);
-
-                return sprintf('%s?temp_url_sig=%s&temp_url_expires=%d', $url, $hash, $expiry);
-            }
-        }
-
-        return null;
     }
 
     /**
@@ -276,7 +285,7 @@ class Document extends EntityModel
      */
     public function getUrl()
     {
-        return url('documents/'.$this->public_id.'/'.$this->name);
+        return url('documents/' . $this->public_id . '/' . $this->name);
     }
 
     /**
@@ -286,16 +295,16 @@ class Document extends EntityModel
      */
     public function getClientUrl($invitation)
     {
-        return url('client/documents/'.$invitation->invitation_key.'/'.$this->public_id.'/'.$this->name);
+        return url('client/documents/' . $invitation->invitation_key . '/' . $this->public_id . '/' . $this->name);
     }
 
     public function getProposalUrl()
     {
-        if (! $this->is_proposal || ! $this->document_key) {
+        if (!$this->is_proposal || !$this->document_key) {
             return '';
         }
 
-        return url('proposal/image/'. $this->account->account_key . '/' . $this->document_key . '/' . $this->name);
+        return url('proposal/image/' . $this->account->account_key . '/' . $this->document_key . '/' . $this->name);
     }
 
     /**
@@ -311,11 +320,11 @@ class Document extends EntityModel
      */
     public function getVFSJSUrl()
     {
-        if (! $this->isPDFEmbeddable()) {
+        if (!$this->isPDFEmbeddable()) {
             return null;
         }
 
-        return url('documents/js/'.$this->public_id.'/'.$this->name.'.js');
+        return url('documents/js/' . $this->public_id . '/' . $this->name . '.js');
     }
 
     /**
@@ -323,11 +332,11 @@ class Document extends EntityModel
      */
     public function getClientVFSJSUrl()
     {
-        if (! $this->isPDFEmbeddable()) {
+        if (!$this->isPDFEmbeddable()) {
             return null;
         }
 
-        return url('client/documents/js/'.$this->public_id.'/'.$this->name.'.js');
+        return url('client/documents/js/' . $this->public_id . '/' . $this->name . '.js');
     }
 
     /**
@@ -335,7 +344,8 @@ class Document extends EntityModel
      */
     public function getPreviewUrl()
     {
-        return $this->preview ? url('documents/preview/'.$this->public_id.'/'.$this->name.'.'.pathinfo($this->preview, PATHINFO_EXTENSION)) : null;
+        return $this->preview ? url('documents/preview/' . $this->public_id . '/' . $this->name . '.' . pathinfo($this->preview,
+                PATHINFO_EXTENSION)) : null;
     }
 
     /**
@@ -387,7 +397,7 @@ Document::deleted(function ($document) {
         ->where('documents.disk', '=', $document->disk)
         ->count();
 
-    if (! $same_path_count) {
+    if (!$same_path_count) {
         $document->getDisk()->delete($document->path);
     }
 
@@ -397,7 +407,7 @@ Document::deleted(function ($document) {
             ->where('documents.preview', '=', $document->preview)
             ->where('documents.disk', '=', $document->disk)
             ->count();
-        if (! $same_preview_count) {
+        if (!$same_preview_count) {
             $document->getDisk()->delete($document->preview);
         }
     }

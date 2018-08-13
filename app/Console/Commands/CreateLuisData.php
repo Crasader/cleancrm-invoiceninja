@@ -64,6 +64,22 @@ class CreateLuisData extends Command
         $this->info(json_encode($intents));
     }
 
+    /**
+     * @return array
+     */
+    protected function getArguments()
+    {
+        return [];
+    }
+
+    /**
+     * @return array
+     */
+    protected function getOptions()
+    {
+        return [];
+    }
+
     private function createIntents($entityType)
     {
         $intents = [];
@@ -156,7 +172,7 @@ class CreateLuisData extends Command
             ]);
             $intents[] = $this->createIntent('ListEntity', "show me {$client}'s active {$entityTypePlural}", [
                 $entityTypePlural => 'EntityType',
-                $client . '\'s'  => 'Name',
+                $client . '\'s' => 'Name',
                 'active' => 'Filter',
             ]);
         }
@@ -191,7 +207,7 @@ class CreateLuisData extends Command
 
         foreach ($entities as $value => $entity) {
             $startPos = strpos($text, (string)$value);
-            if (! $startPos) {
+            if (!$startPos) {
                 dd("Failed to find {$value} in {$text}");
             }
             $entityClass = new stdClass();
@@ -202,22 +218,5 @@ class CreateLuisData extends Command
         }
 
         return $intent;
-    }
-
-
-    /**
-     * @return array
-     */
-    protected function getArguments()
-    {
-        return [];
-    }
-
-    /**
-     * @return array
-     */
-    protected function getOptions()
-    {
-        return [];
     }
 }

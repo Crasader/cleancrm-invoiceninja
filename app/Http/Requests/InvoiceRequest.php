@@ -18,34 +18,44 @@ class InvoiceRequest extends EntityRequest
     {
         $invoice = parent::entity();
 
-        if ($invoice && $invoice->isQuote())
+        if ($invoice && $invoice->isQuote()) {
             $standardOrRecurringInvoice = ENTITY_QUOTE;
-        elseif($invoice && $invoice->is_recurring)
+        } elseif ($invoice && $invoice->is_recurring) {
             $standardOrRecurringInvoice = ENTITY_RECURRING_INVOICE;
-        else
+        } else {
             $standardOrRecurringInvoice = ENTITY_INVOICE;
+        }
 
 
-        if(request()->is('invoices/create') && !$this->user()->can('create', ENTITY_INVOICE))
+        if (request()->is('invoices/create') && !$this->user()->can('create', ENTITY_INVOICE)) {
             return false;
+        }
 
-        if(request()->is('recurring_invoices/create') && !$this->user()->can('create', ENTITY_RECURRING_INVOICE))
+        if (request()->is('recurring_invoices/create') && !$this->user()->can('create', ENTITY_RECURRING_INVOICE)) {
             return false;
+        }
 
-        if(request()->is('quotes/create') && !$this->user()->can('create', ENTITY_QUOTE))
+        if (request()->is('quotes/create') && !$this->user()->can('create', ENTITY_QUOTE)) {
             return false;
+        }
 
-        if(request()->is('invoices/*/edit') && request()->isMethod('put') && !$this->user()->can('edit', $standardOrRecurringInvoice))
+        if (request()->is('invoices/*/edit') && request()->isMethod('put') && !$this->user()->can('edit',
+                $standardOrRecurringInvoice)) {
             return false;
+        }
 
-        if(request()->is('quotes/*/edit') && request()->isMethod('put') && !$this->user()->can('edit', ENTITY_QUOTE))
+        if (request()->is('quotes/*/edit') && request()->isMethod('put') && !$this->user()->can('edit', ENTITY_QUOTE)) {
             return false;
+        }
 
-        if(request()->is('invoices/*') && request()->isMethod('get') && !$this->user()->can('view', $standardOrRecurringInvoice))
+        if (request()->is('invoices/*') && request()->isMethod('get') && !$this->user()->can('view',
+                $standardOrRecurringInvoice)) {
             return false;
+        }
 
-        if(request()->is('quotes/*') && request()->isMethod('get') && !$this->user()->can('view', ENTITY_QUOTE))
+        if (request()->is('quotes/*') && request()->isMethod('get') && !$this->user()->can('view', ENTITY_QUOTE)) {
             return false;
+        }
 
         if ($invoice) {
             HistoryUtils::trackViewed($invoice);
@@ -60,19 +70,19 @@ class InvoiceRequest extends EntityRequest
         $invoice = parent::entity();
 
         // support loading an invoice by its invoice number
-        if ($this->invoice_number && ! $invoice) {
+        if ($this->invoice_number && !$invoice) {
             $invoice = Invoice::scope()
-                        ->whereInvoiceNumber($this->invoice_number)
-                        ->withTrashed()
-                        ->first();
+                ->whereInvoiceNumber($this->invoice_number)
+                ->withTrashed()
+                ->first();
 
-            if (! $invoice) {
+            if (!$invoice) {
                 abort(404);
             }
         }
 
         // eager load the invoice items
-        if ($invoice && ! $invoice->relationLoaded('invoice_items')) {
+        if ($invoice && !$invoice->relationLoaded('invoice_items')) {
             $invoice->load('invoice_items');
         }
 

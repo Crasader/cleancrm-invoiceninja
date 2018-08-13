@@ -17,10 +17,11 @@ class ProposalTemplateDatatable extends EntityDatatable
             [
                 'name',
                 function ($model) {
-                    if (Auth::user()->can('view', [ENTITY_PROPOSAL_TEMPLATE, $model]))
+                    if (Auth::user()->can('view', [ENTITY_PROPOSAL_TEMPLATE, $model])) {
                         return link_to("proposals/templates/{$model->public_id}", $model->name)->toHtml();
-                    else
+                    } else {
                         return $model->name;
+                    }
                 },
             ],
             [

@@ -27,8 +27,11 @@ class ProposalController extends BaseController
 
     protected $entityType = ENTITY_PROPOSAL;
 
-    public function __construct(ProposalRepository $proposalRepo, ProposalService $proposalService, ContactMailer $contactMailer)
-    {
+    public function __construct(
+        ProposalRepository $proposalRepo,
+        ProposalService $proposalService,
+        ContactMailer $contactMailer
+    ) {
         $this->proposalRepo = $proposalRepo;
         $this->proposalService = $proposalService;
         $this->contactMailer = $contactMailer;
@@ -64,7 +67,8 @@ class ProposalController extends BaseController
             'method' => 'POST',
             'url' => 'proposals',
             'title' => trans('texts.new_proposal'),
-            'invoices' => Invoice::scope()->with('client.contacts', 'client.country')->unapprovedQuotes()->orderBy('id')->get(),
+            'invoices' => Invoice::scope()->with('client.contacts',
+                'client.country')->unapprovedQuotes()->orderBy('id')->get(),
             'invoicePublicId' => $request->invoice_id,
             'templatePublicId' => $request->proposal_template_id,
         ]);
@@ -89,7 +93,8 @@ class ProposalController extends BaseController
             'method' => 'PUT',
             'url' => 'proposals/' . $proposal->public_id,
             'title' => trans('texts.edit_proposal'),
-            'invoices' => Invoice::scope()->with('client.contacts', 'client.country')->withActiveOrSelected($proposal->invoice_id)->unapprovedQuotes($proposal->invoice_id)->orderBy('id')->get(),
+            'invoices' => Invoice::scope()->with('client.contacts',
+                'client.country')->withActiveOrSelected($proposal->invoice_id)->unapprovedQuotes($proposal->invoice_id)->orderBy('id')->get(),
             'invoicePublicId' => $proposal->invoice ? $proposal->invoice->public_id : null,
             'templatePublicId' => $proposal->proposal_template ? $proposal->proposal_template->public_id : null,
         ]);
@@ -102,7 +107,7 @@ class ProposalController extends BaseController
         $account = auth()->user()->account;
         $templates = ProposalTemplate::whereAccountId($account->id)->withActiveOrSelected($proposal ? $proposal->proposal_template_id : false)->orderBy('name')->get();
 
-        if (! $templates->count()) {
+        if (!$templates->count()) {
             $templates = ProposalTemplate::whereNull('account_id')->orderBy('name')->get();
         }
 

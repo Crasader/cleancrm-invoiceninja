@@ -41,10 +41,10 @@ class CreateTestData extends Command
     /**
      * CreateTestData constructor.
      *
-     * @param ClientRepository  $clientRepo
+     * @param ClientRepository $clientRepo
      * @param InvoiceRepository $invoiceRepo
      * @param PaymentRepository $paymentRepo
-     * @param VendorRepository  $vendorRepo
+     * @param VendorRepository $vendorRepo
      * @param ExpenseRepository $expenseRepo
      * @param TaskRepository $taskRepo
      * @param AccountRepository $accountRepo
@@ -57,8 +57,8 @@ class CreateTestData extends Command
         ExpenseRepository $expenseRepo,
         TaskRepository $taskRepo,
         ProjectRepository $projectRepo,
-        AccountRepository $accountRepo)
-    {
+        AccountRepository $accountRepo
+    ) {
         parent::__construct();
 
         $this->faker = Factory::create();
@@ -83,7 +83,7 @@ class CreateTestData extends Command
             return false;
         }
 
-        $this->info(date('r').' Running CreateTestData...');
+        $this->info(date('r') . ' Running CreateTestData...');
         $this->count = $this->argument('count');
 
         if ($database = $this->option('database')) {
@@ -110,6 +110,22 @@ class CreateTestData extends Command
         $this->info('Done');
     }
 
+    /**
+     * @return array
+     */
+    protected function getArguments()
+    {
+        return [];
+    }
+
+    /**
+     * @return array
+     */
+    protected function getOptions()
+    {
+        return [];
+    }
+
     private function createClients()
     {
         for ($i = 0; $i < $this->count; $i++) {
@@ -120,12 +136,14 @@ class CreateTestData extends Command
                 'city' => $this->faker->city,
                 'state' => $this->faker->state,
                 'postal_code' => $this->faker->postcode,
-                'contacts' => [[
-                    'first_name' => $this->faker->firstName,
-                    'last_name' => $this->faker->lastName,
-                    'email' => $this->faker->safeEmail,
-                    'phone' => $this->faker->phoneNumber,
-                ]],
+                'contacts' => [
+                    [
+                        'first_name' => $this->faker->firstName,
+                        'last_name' => $this->faker->lastName,
+                        'email' => $this->faker->safeEmail,
+                        'phone' => $this->faker->phoneNumber,
+                    ]
+                ],
             ];
 
             $client = $this->clientRepo->save($data);
@@ -149,18 +167,20 @@ class CreateTestData extends Command
                 'client_id' => $client->id,
                 'invoice_date_sql' => date_create()->modify(rand(-100, 100) . ' days')->format('Y-m-d'),
                 'due_date_sql' => date_create()->modify(rand(-100, 100) . ' days')->format('Y-m-d'),
-                'invoice_items' => [[
-                    'product_key' => $this->faker->word,
-                    'qty' => $this->faker->randomDigit + 1,
-                    'cost' => $this->faker->randomFloat(2, 1, 10),
-                    'notes' => $this->faker->text($this->faker->numberBetween(50, 300)),
-                ]],
+                'invoice_items' => [
+                    [
+                        'product_key' => $this->faker->word,
+                        'qty' => $this->faker->randomDigit + 1,
+                        'cost' => $this->faker->randomFloat(2, 1, 10),
+                        'notes' => $this->faker->text($this->faker->numberBetween(50, 300)),
+                    ]
+                ],
             ];
 
             $invoice = $this->invoiceRepo->save($data);
             $this->info('Invoice: ' . $invoice->invoice_number);
 
-            if (! $isQuote) {
+            if (!$isQuote) {
                 $this->createPayment($client, $invoice);
             }
         }
@@ -207,8 +227,6 @@ class CreateTestData extends Command
         }
     }
 
-
-
     private function createVendors()
     {
         for ($i = 0; $i < $this->count; $i++) {
@@ -219,12 +237,14 @@ class CreateTestData extends Command
                 'city' => $this->faker->city,
                 'state' => $this->faker->state,
                 'postal_code' => $this->faker->postcode,
-                'vendor_contacts' => [[
-                    'first_name' => $this->faker->firstName,
-                    'last_name' => $this->faker->lastName,
-                    'email' => $this->faker->safeEmail,
-                    'phone' => $this->faker->phoneNumber,
-                ]],
+                'vendor_contacts' => [
+                    [
+                        'first_name' => $this->faker->firstName,
+                        'last_name' => $this->faker->lastName,
+                        'email' => $this->faker->safeEmail,
+                        'phone' => $this->faker->phoneNumber,
+                    ]
+                ],
             ];
 
             $vendor = $this->vendorRepo->save($data);
@@ -294,21 +314,5 @@ class CreateTestData extends Command
         $project->user_id = 1;
         $project->public_id = $publicId;
         $project->save();
-    }
-
-    /**
-     * @return array
-     */
-    protected function getArguments()
-    {
-        return [];
-    }
-
-    /**
-     * @return array
-     */
-    protected function getOptions()
-    {
-        return [];
     }
 }

@@ -118,7 +118,7 @@ class BaseTransformer extends TransformerAbstract
     {
         $productKey = trim(strtolower($data->$key));
 
-        if (! isset($this->maps['product'][$productKey])) {
+        if (!isset($this->maps['product'][$productKey])) {
             return $default;
         }
 
@@ -136,7 +136,7 @@ class BaseTransformer extends TransformerAbstract
     {
         $email = trim(strtolower($email));
 
-        if (! isset($this->maps['contact'][$email])) {
+        if (!isset($this->maps['contact'][$email])) {
             return false;
         }
 
@@ -152,7 +152,7 @@ class BaseTransformer extends TransformerAbstract
     {
         $key = trim($key);
 
-        if (! isset($this->maps['customer'][$key])) {
+        if (!isset($this->maps['customer'][$key])) {
             return false;
         }
 
@@ -222,8 +222,8 @@ class BaseTransformer extends TransformerAbstract
     /**
      * @param $date
      * @param string $format
-     * @param mixed  $data
-     * @param mixed  $field
+     * @param mixed $data
+     * @param mixed $field
      *
      * @return null
      */
@@ -310,7 +310,7 @@ class BaseTransformer extends TransformerAbstract
         $invoiceNumber = $this->getInvoiceNumber($invoiceNumber);
         $invoiceNumber = strtolower($invoiceNumber);
 
-        return isset($this->maps[ENTITY_INVOICE.'_'.ENTITY_CLIENT][$invoiceNumber]) ? $this->maps[ENTITY_INVOICE.'_'.ENTITY_CLIENT][$invoiceNumber] : null;
+        return isset($this->maps[ENTITY_INVOICE . '_' . ENTITY_CLIENT][$invoiceNumber]) ? $this->maps[ENTITY_INVOICE . '_' . ENTITY_CLIENT][$invoiceNumber] : null;
     }
 
     /**

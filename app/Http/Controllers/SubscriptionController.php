@@ -93,10 +93,10 @@ class SubscriptionController extends BaseController
     public function create()
     {
         $data = [
-          'subscription' => null,
-          'method' => 'POST',
-          'url' => 'subscriptions',
-          'title' => trans('texts.add_subscription'),
+            'subscription' => null,
+            'method' => 'POST',
+            'url' => 'subscriptions',
+            'title' => trans('texts.add_subscription'),
         ];
 
         return View::make('accounts.subscription', $data);

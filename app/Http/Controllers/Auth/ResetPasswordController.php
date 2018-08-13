@@ -42,6 +42,14 @@ class ResetPasswordController extends Controller
         $this->middleware('guest');
     }
 
+    public function showResetForm(Request $request, $token = null)
+    {
+        return view('auth.passwords.reset')->with([
+            'token' => $token,
+            'url' => '/password/reset'
+        ]);
+    }
+
     protected function sendResetResponse($response)
     {
         $user = auth()->user();
@@ -54,13 +62,5 @@ class ResetPasswordController extends Controller
             Event::fire(new UserLoggedIn());
             return $this->traitSendResetResponse($response);
         }
-    }
-
-    public function showResetForm(Request $request, $token = null)
-    {
-        return view('auth.passwords.reset')->with([
-            'token' => $token,
-            'url' => '/password/reset'
-        ]);
     }
 }

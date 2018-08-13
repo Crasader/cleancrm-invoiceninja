@@ -24,8 +24,10 @@ class RecurringExpenseController extends BaseController
     protected $recurringExpenseService;
     protected $entityType = ENTITY_RECURRING_EXPENSE;
 
-    public function __construct(RecurringExpenseRepository $recurringExpenseRepo, RecurringExpenseService $recurringExpenseService)
-    {
+    public function __construct(
+        RecurringExpenseRepository $recurringExpenseRepo,
+        RecurringExpenseService $recurringExpenseService
+    ) {
         $this->recurringExpenseRepo = $recurringExpenseRepo;
         $this->recurringExpenseService = $recurringExpenseService;
     }
@@ -83,7 +85,7 @@ class RecurringExpenseController extends BaseController
         $expense = $request->entity();
 
         $actions = [];
-        if (! $expense->trashed()) {
+        if (!$expense->trashed()) {
             $actions[] = ['url' => 'javascript:submitAction("archive")', 'label' => trans('texts.archive_expense')];
             $actions[] = ['url' => 'javascript:onDeleteClick()', 'label' => trans('texts.delete_expense')];
         } else {
@@ -95,7 +97,7 @@ class RecurringExpenseController extends BaseController
             'expense' => $expense,
             'entity' => $expense,
             'method' => 'PUT',
-            'url' => 'recurring_expenses/'.$expense->public_id,
+            'url' => 'recurring_expenses/' . $expense->public_id,
             'title' => 'Edit Expense',
             'actions' => $actions,
             'vendors' => Vendor::scope()->with('vendor_contacts')->orderBy('name')->get(),

@@ -25,7 +25,7 @@ class ResetData extends Command
     {
         $this->info(date('r') . ' Running ResetData...');
 
-        if (! Utils::isNinjaDev()) {
+        if (!Utils::isNinjaDev()) {
             return;
         }
 

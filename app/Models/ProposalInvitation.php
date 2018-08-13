@@ -60,23 +60,20 @@ class ProposalInvitation extends EntityModel
     }
 }
 
-ProposalInvitation::creating(function ($invitation)
-{
+ProposalInvitation::creating(function ($invitation) {
     LookupProposalInvitation::createNew($invitation->account->account_key, [
         'invitation_key' => $invitation->invitation_key,
     ]);
 });
 
-ProposalInvitation::updating(function ($invitation)
-{
+ProposalInvitation::updating(function ($invitation) {
     $dirty = $invitation->getDirty();
     if (array_key_exists('message_id', $dirty)) {
         LookupProposalInvitation::updateInvitation($invitation->account->account_key, $invitation);
     }
 });
 
-ProposalInvitation::deleted(function ($invitation)
-{
+ProposalInvitation::deleted(function ($invitation) {
     if ($invitation->forceDeleting) {
         LookupProposalInvitation::deleteWhere([
             'invitation_key' => $invitation->invitation_key,

@@ -21,21 +21,27 @@ class Contact extends EntityModel implements AuthenticatableContract, CanResetPa
     use CanResetPassword;
     use Notifiable;
 
+    /**
+     * @var string
+     */
+    public static $fieldFirstName = 'first_name';
+    /**
+     * @var string
+     */
+    public static $fieldLastName = 'last_name';
+    /**
+     * @var string
+     */
+    public static $fieldEmail = 'email';
+    /**
+     * @var string
+     */
+    public static $fieldPhone = 'phone';
     protected $guard = 'client';
-
     /**
      * @var array
      */
     protected $dates = ['deleted_at'];
-
-    /**
-     * @return mixed
-     */
-    public function getEntityType()
-    {
-        return ENTITY_CONTACT;
-    }
-
     /**
      * @var array
      */
@@ -48,7 +54,6 @@ class Contact extends EntityModel implements AuthenticatableContract, CanResetPa
         'custom_value1',
         'custom_value2',
     ];
-
     /**
      * The attributes excluded from the model's JSON form.
      *
@@ -60,24 +65,12 @@ class Contact extends EntityModel implements AuthenticatableContract, CanResetPa
     ];
 
     /**
-     * @var string
+     * @return mixed
      */
-    public static $fieldFirstName = 'first_name';
-
-    /**
-     * @var string
-     */
-    public static $fieldLastName = 'last_name';
-
-    /**
-     * @var string
-     */
-    public static $fieldEmail = 'email';
-
-    /**
-     * @var string
-     */
-    public static $fieldPhone = 'phone';
+    public function getEntityType()
+    {
+        return ENTITY_CONTACT;
+    }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
@@ -167,7 +160,7 @@ class Contact extends EntityModel implements AuthenticatableContract, CanResetPa
     public function getFullName()
     {
         if ($this->first_name || $this->last_name) {
-            return trim($this->first_name.' '.$this->last_name);
+            return trim($this->first_name . ' ' . $this->last_name);
         } else {
             return '';
         }
@@ -178,7 +171,7 @@ class Contact extends EntityModel implements AuthenticatableContract, CanResetPa
      */
     public function getLinkAttribute()
     {
-        if (! $this->account) {
+        if (!$this->account) {
             $this->load('account');
         }
 
@@ -187,7 +180,7 @@ class Contact extends EntityModel implements AuthenticatableContract, CanResetPa
         $url = trim(SITE_URL, '/');
 
         if ($account->hasFeature(FEATURE_CUSTOM_URL)) {
-            if (Utils::isNinjaProd() && ! Utils::isReseller()) {
+            if (Utils::isNinjaProd() && !Utils::isReseller()) {
                 $url = $account->present()->clientPortalLink();
             }
 
@@ -212,15 +205,13 @@ class Contact extends EntityModel implements AuthenticatableContract, CanResetPa
     }
 }
 
-Contact::creating(function ($contact)
-{
+Contact::creating(function ($contact) {
     LookupContact::createNew($contact->account->account_key, [
         'contact_key' => $contact->contact_key,
     ]);
 });
 
-Contact::deleted(function ($contact)
-{
+Contact::deleted(function ($contact) {
     if ($contact->forceDeleting) {
         LookupContact::deleteWhere([
             'contact_key' => $contact->contact_key,

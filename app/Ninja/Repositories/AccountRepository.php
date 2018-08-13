@@ -31,7 +31,7 @@ class AccountRepository
 {
     public function create($firstName = '', $lastName = '', $email = '', $password = '', $company = false)
     {
-        if (! $company) {
+        if (!$company) {
             if (Utils::isNinja()) {
                 $this->checkForSpammer();
             }
@@ -101,23 +101,23 @@ class AccountRepository
         $account->save();
 
         $user = new User();
-        if (! $firstName && ! $lastName && ! $email && ! $password) {
+        if (!$firstName && !$lastName && !$email && !$password) {
             $user->password = strtolower(str_random(RANDOM_KEY_LENGTH));
             $user->username = strtolower(str_random(RANDOM_KEY_LENGTH));
         } else {
             $user->first_name = $firstName;
             $user->last_name = $lastName;
             $user->email = $user->username = $email;
-            if (! $password) {
+            if (!$password) {
                 $password = strtolower(str_random(RANDOM_KEY_LENGTH));
             }
             $user->password = bcrypt($password);
         }
 
-        $user->confirmed = ! Utils::isNinja();
-        $user->registered = ! Utils::isNinja() || $email;
+        $user->confirmed = !Utils::isNinja();
+        $user->registered = !Utils::isNinja() || $email;
 
-        if (! $user->confirmed) {
+        if (!$user->confirmed) {
             $user->confirmation_code = strtolower(str_random(RANDOM_KEY_LENGTH));
         }
 
@@ -129,208 +129,11 @@ class AccountRepository
         return $account;
     }
 
-    private function checkForSpammer()
-    {
-        $ip = Request::getClientIp();
-
-        // Apple's IP for their test accounts
-        if ($ip == '17.200.11.44') {
-            return;
-        }
-
-        $count = Account::whereIp($ip)->whereHas('users', function ($query) {
-            $query->whereRegistered(true);
-        })->count();
-
-        if ($count > 10 && $errorEmail = env('ERROR_EMAIL')) {
-            \Mail::raw($ip, function ($message) use ($ip, $errorEmail) {
-                $message->to($errorEmail)
-                        ->from(CONTACT_EMAIL)
-                        ->subject('Duplicate company for IP: ' . $ip);
-            });
-            if ($count >= 15) {
-                abort();
-            }
-        }
-    }
-
     public function getSearchData($user)
     {
         $data = $this->getAccountSearchData($user);
 
         $data['navigation'] = $user->is_admin ? $this->getNavigationSearchData() : [];
-
-        return $data;
-    }
-
-    private function getAccountSearchData($user)
-    {
-        $account = $user->account;
-
-        $data = [
-            'clients' => [],
-            'contacts' => [],
-            'invoices' => [],
-            'quotes' => [],
-        ];
-
-        // include custom client fields in search
-        if ($account->customLabel('client1')) {
-            $data[$account->present()->customLabel('client1')] = [];
-        }
-        if ($account->customLabel('client2')) {
-            $data[$account->present()->customLabel('client2')] = [];
-        }
-        if ($account->customLabel('invoice_text1')) {
-            $data[$account->present()->customLabel('invoice_text1')] = [];
-        }
-        if ($account->customLabel('invoice_text2')) {
-            $data[$account->present()->customLabel('invoice_text2')] = [];
-        }
-
-        if ($user->hasPermission(['view_client', 'view_invoice'], true)) {
-            $clients = Client::scope()
-                        ->with('contacts', 'invoices')
-                        ->withTrashed()
-                        ->with(['contacts', 'invoices' => function ($query) use ($user) {
-                            $query->withTrashed();
-                        }])->get();
-        } else {
-            $clients = Client::scope()
-                        ->where('user_id', '=', $user->id)
-                        ->withTrashed()
-                        ->with(['contacts', 'invoices' => function ($query) use ($user) {
-                            $query->withTrashed()
-                                  ->where('user_id', '=', $user->id);
-                        }])->get();
-        }
-
-        foreach ($clients as $client) {
-            if (! $client->is_deleted) {
-                if ($client->name) {
-                    $data['clients'][] = [
-                        'value' => ($client->id_number ? $client->id_number . ': ' : '') . $client->name,
-                        'tokens' => implode(',', [$client->name, $client->id_number, $client->vat_number, $client->work_phone]),
-                        'url' => $client->present()->url,
-                    ];
-                }
-
-                if ($client->custom_value1) {
-                    $data[$account->present()->customLabel('client1')][] = [
-                        'value' => "{$client->custom_value1}: " . $client->getDisplayName(),
-                        'tokens' => $client->custom_value1,
-                        'url' => $client->present()->url,
-                    ];
-                }
-                if ($client->custom_value2) {
-                    $data[$account->present()->customLabel('client2')][] = [
-                        'value' => "{$client->custom_value2}: " . $client->getDisplayName(),
-                        'tokens' => $client->custom_value2,
-                        'url' => $client->present()->url,
-                    ];
-                }
-
-                foreach ($client->contacts as $contact) {
-                    $data['contacts'][] = [
-                        'value' => $contact->getSearchName(),
-                        'tokens' => implode(',', [$contact->first_name, $contact->last_name, $contact->email, $contact->phone]),
-                        'url' => $client->present()->url,
-                    ];
-                }
-            }
-
-            foreach ($client->invoices as $invoice) {
-                $entityType = $invoice->getEntityType();
-                $data["{$entityType}s"][] = [
-                    'value' => $invoice->getDisplayName() . ': ' . $client->getDisplayName(),
-                    'tokens' => implode(',', [$invoice->invoice_number, $invoice->po_number]),
-                    'url' => $invoice->present()->url,
-                ];
-
-                if ($customValue = $invoice->custom_text_value1) {
-                    $data[$account->present()->customLabel('invoice_text1')][] = [
-                        'value' => "{$customValue}: {$invoice->getDisplayName()}",
-                        'tokens' => $customValue,
-                        'url' => $invoice->present()->url,
-                    ];
-                }
-                if ($customValue = $invoice->custom_text_value2) {
-                    $data[$account->present()->customLabel('invoice_text2')][] = [
-                        'value' => "{$customValue}: {$invoice->getDisplayName()}",
-                        'tokens' => $customValue,
-                        'url' => $invoice->present()->url,
-                    ];
-                }
-            }
-        }
-
-        return $data;
-    }
-
-    private function getNavigationSearchData()
-    {
-        $entityTypes = [
-            ENTITY_INVOICE,
-            ENTITY_CLIENT,
-            ENTITY_QUOTE,
-            ENTITY_TASK,
-            ENTITY_EXPENSE,
-            ENTITY_EXPENSE_CATEGORY,
-            ENTITY_VENDOR,
-            ENTITY_RECURRING_INVOICE,
-            ENTITY_RECURRING_QUOTE,
-            ENTITY_PAYMENT,
-            ENTITY_CREDIT,
-            ENTITY_PROJECT,
-            ENTITY_PROPOSAL,
-        ];
-
-        foreach ($entityTypes as $entityType) {
-            $features[] = [
-                "new_{$entityType}",
-                Utils::pluralizeEntityType($entityType) . '/create',
-            ];
-            $features[] = [
-                'list_' . Utils::pluralizeEntityType($entityType),
-                Utils::pluralizeEntityType($entityType),
-            ];
-        }
-
-        $features = array_merge($features, [
-            ['dashboard', '/dashboard'],
-            ['reports', '/reports'],
-            ['calendar', '/calendar'],
-            ['kanban', '/tasks/kanban'],
-            ['customize_design', '/settings/customize_design'],
-            ['new_tax_rate', '/tax_rates/create'],
-            ['new_product', '/products/create'],
-            ['new_user', '/users/create'],
-            ['custom_fields', '/settings/invoice_settings'],
-            ['invoice_number', '/settings/invoice_settings'],
-            ['buy_now_buttons', '/settings/client_portal#buy_now'],
-            ['invoice_fields', '/settings/invoice_design#invoice_fields'],
-        ]);
-
-        $settings = array_merge(Account::$basicSettings, Account::$advancedSettings);
-
-        if (! Utils::isNinjaProd()) {
-            $settings[] = ACCOUNT_SYSTEM_SETTINGS;
-        }
-
-        foreach ($settings as $setting) {
-            $features[] = [
-                $setting,
-                "/settings/{$setting}",
-            ];
-        }
-
-        foreach ($features as $feature) {
-            $data[] = [
-                'value' => trans('texts.' . $feature[0]),
-                'tokens' => trans('texts.' . $feature[0]),
-                'url' => URL::to($feature[1]),
-            ];
-        }
 
         return $data;
     }
@@ -420,7 +223,7 @@ class AccountRepository
         }
 
         // Don't change this without updating the regex in PaymentService->createPayment()
-        $item->product_key = 'Plan - '.ucfirst($plan).' ('.ucfirst($term).')';
+        $item->product_key = 'Plan - ' . ucfirst($plan) . ' (' . ucfirst($term) . ')';
         $invoice->invoice_items()->save($item);
 
         $invitation = Invitation::createNew($invoice);
@@ -434,7 +237,8 @@ class AccountRepository
 
     public function getNinjaAccount()
     {
-        $account = Account::where('account_key', 'LIKE', substr(NINJA_ACCOUNT_KEY, 0, 30) . '%')->orderBy('id')->first();
+        $account = Account::where('account_key', 'LIKE',
+            substr(NINJA_ACCOUNT_KEY, 0, 30) . '%')->orderBy('id')->first();
 
         if ($account) {
             return $account;
@@ -484,16 +288,27 @@ class AccountRepository
         $ninjaAccount = $this->getNinjaAccount();
         $ninjaUser = $ninjaAccount->getPrimaryUser();
         $client = Client::whereAccountId($ninjaAccount->id)
-                    ->wherePublicId($account->id)
-                    ->first();
+            ->wherePublicId($account->id)
+            ->first();
 
-        if (! $client) {
+        if (!$client) {
             $client = new Client();
             $client->public_id = $account->id;
             $client->account_id = $ninjaAccount->id;
             $client->user_id = $ninjaUser->id;
             $client->currency_id = 1;
-            foreach (['name', 'address1', 'address2', 'city', 'state', 'postal_code', 'country_id', 'work_phone', 'language_id', 'vat_number'] as $field) {
+            foreach ([
+                         'name',
+                         'address1',
+                         'address2',
+                         'city',
+                         'state',
+                         'postal_code',
+                         'country_id',
+                         'work_phone',
+                         'language_id',
+                         'vat_number'
+                     ] as $field) {
                 $client->$field = $account->$field;
             }
             $client->save();
@@ -515,8 +330,8 @@ class AccountRepository
     public function findByKey($key)
     {
         $account = Account::whereAccountKey($key)
-                    ->with('clients.invoices.invoice_items', 'clients.contacts')
-                    ->firstOrFail();
+            ->with('clients.invoices.invoice_items', 'clients.contacts')
+            ->firstOrFail();
 
         return $account;
     }
@@ -530,7 +345,7 @@ class AccountRepository
 
     public function updateUserFromOauth($user, $firstName, $lastName, $email, $providerId, $oauthUserId)
     {
-        if (! LookupUser::validateField('oauth_user_key', $providerId . '-' . $oauthUserId)) {
+        if (!LookupUser::validateField('oauth_user_key', $providerId . '-' . $oauthUserId)) {
             return trans('texts.oauth_taken');
         }
 
@@ -539,8 +354,8 @@ class AccountRepository
             return trans('texts.oauth_taken');
         }
 
-        if (! $user->registered) {
-            $rules = ['email' => 'email|required|unique:users,email,'.$user->id.',id'];
+        if (!$user->registered) {
+            $rules = ['email' => 'email|required|unique:users,email,' . $user->id . ',id'];
             $validator = Validator::make(['email' => $email], $rules);
 
             if ($validator->fails()) {
@@ -548,7 +363,7 @@ class AccountRepository
                 return $messages->first('email');
             }
 
-            if (! LookupUser::validateField('email', $email, $user)) {
+            if (!LookupUser::validateField('email', $email, $user)) {
                 return trans('texts.email_taken');
             }
 
@@ -569,7 +384,7 @@ class AccountRepository
 
     public function registerNinjaUser($user)
     {
-        if (! $user || $user->email == TEST_USERNAME) {
+        if (!$user || $user->email == TEST_USERNAME) {
             return false;
         }
 
@@ -582,7 +397,7 @@ class AccountRepository
         ];
 
         foreach ($fields as $key => $value) {
-            $data .= $key.'='.$value.'&';
+            $data .= $key . '=' . $value . '&';
         }
         rtrim($data, '&');
 
@@ -598,8 +413,8 @@ class AccountRepository
     public function findUserByOauth($providerId, $oauthUserId)
     {
         return User::where('oauth_user_id', $oauthUserId)
-                    ->where('oauth_provider_id', $providerId)
-                    ->first();
+            ->where('oauth_provider_id', $providerId)
+            ->first();
     }
 
     public function findUsers($user, $with = null)
@@ -628,22 +443,22 @@ class AccountRepository
 
     public function findUserAccounts($userId1, $userId2 = false)
     {
-        if (! Schema::hasTable('user_accounts')) {
+        if (!Schema::hasTable('user_accounts')) {
             return false;
         }
 
         $query = UserAccount::where('user_id1', '=', $userId1)
-                                ->orWhere('user_id2', '=', $userId1)
-                                ->orWhere('user_id3', '=', $userId1)
-                                ->orWhere('user_id4', '=', $userId1)
-                                ->orWhere('user_id5', '=', $userId1);
+            ->orWhere('user_id2', '=', $userId1)
+            ->orWhere('user_id3', '=', $userId1)
+            ->orWhere('user_id4', '=', $userId1)
+            ->orWhere('user_id5', '=', $userId1);
 
         if ($userId2) {
             $query->orWhere('user_id1', '=', $userId2)
-                    ->orWhere('user_id2', '=', $userId2)
-                    ->orWhere('user_id3', '=', $userId2)
-                    ->orWhere('user_id4', '=', $userId2)
-                    ->orWhere('user_id5', '=', $userId2);
+                ->orWhere('user_id2', '=', $userId2)
+                ->orWhere('user_id3', '=', $userId2)
+                ->orWhere('user_id4', '=', $userId2)
+                ->orWhere('user_id5', '=', $userId2);
         }
 
         return $query->first(['id', 'user_id1', 'user_id2', 'user_id3', 'user_id4', 'user_id5']);
@@ -651,7 +466,7 @@ class AccountRepository
 
     public function getUserAccounts($record, $with = null)
     {
-        if (! $record) {
+        if (!$record) {
             return false;
         }
 
@@ -664,7 +479,7 @@ class AccountRepository
         }
 
         $users = User::with('account')
-                    ->whereIn('id', $userIds);
+            ->whereIn('id', $userIds);
 
         if ($with) {
             $users->with($with);
@@ -675,7 +490,7 @@ class AccountRepository
 
     public function prepareUsersData($record)
     {
-        if (! $record) {
+        if (!$record) {
             return false;
         }
 
@@ -710,7 +525,7 @@ class AccountRepository
 
         if ($record) {
             foreach ([$userId1, $userId2] as $userId) {
-                if (! $record->hasUserId($userId)) {
+                if (!$record->hasUserId($userId)) {
                     $record->setUserId($userId);
                 }
             }
@@ -745,7 +560,7 @@ class AccountRepository
 
         $user = User::whereId($userId)->first();
 
-        if (! $user->public_id && $user->account->hasMultipleAccounts()) {
+        if (!$user->public_id && $user->account->hasMultipleAccounts()) {
             $company = Company::create();
             $company->save();
             $user->account->company_id = $company->id;
@@ -755,20 +570,20 @@ class AccountRepository
 
     public function findWithReminders()
     {
-        return Account::whereHas('account_email_settings', function($query) {
+        return Account::whereHas('account_email_settings', function ($query) {
             $query->whereRaw('enable_reminder1 = 1 OR enable_reminder2 = 1 OR enable_reminder3 = 1 OR enable_reminder4 = 1');
         })->get();
     }
 
     public function findWithFees()
     {
-        return Account::whereHas('account_email_settings', function($query) {
+        return Account::whereHas('account_email_settings', function ($query) {
             $query->where('late_fee1_amount', '>', 0)
-                    ->orWhere('late_fee1_percent', '>', 0)
-                    ->orWhere('late_fee2_amount', '>', 0)
-                    ->orWhere('late_fee2_percent', '>', 0)
-                    ->orWhere('late_fee3_amount', '>', 0)
-                    ->orWhere('late_fee3_percent', '>', 0);
+                ->orWhere('late_fee1_percent', '>', 0)
+                ->orWhere('late_fee2_amount', '>', 0)
+                ->orWhere('late_fee2_percent', '>', 0)
+                ->orWhere('late_fee3_amount', '>', 0)
+                ->orWhere('late_fee3_percent', '>', 0);
         })->get();
     }
 
@@ -801,5 +616,210 @@ class AccountRepository
     {
         $account->fill($data);
         $account->save();
+    }
+
+    private function checkForSpammer()
+    {
+        $ip = Request::getClientIp();
+
+        // Apple's IP for their test accounts
+        if ($ip == '17.200.11.44') {
+            return;
+        }
+
+        $count = Account::whereIp($ip)->whereHas('users', function ($query) {
+            $query->whereRegistered(true);
+        })->count();
+
+        if ($count > 10 && $errorEmail = env('ERROR_EMAIL')) {
+            \Mail::raw($ip, function ($message) use ($ip, $errorEmail) {
+                $message->to($errorEmail)
+                    ->from(CONTACT_EMAIL)
+                    ->subject('Duplicate company for IP: ' . $ip);
+            });
+            if ($count >= 15) {
+                abort();
+            }
+        }
+    }
+
+    private function getAccountSearchData($user)
+    {
+        $account = $user->account;
+
+        $data = [
+            'clients' => [],
+            'contacts' => [],
+            'invoices' => [],
+            'quotes' => [],
+        ];
+
+        // include custom client fields in search
+        if ($account->customLabel('client1')) {
+            $data[$account->present()->customLabel('client1')] = [];
+        }
+        if ($account->customLabel('client2')) {
+            $data[$account->present()->customLabel('client2')] = [];
+        }
+        if ($account->customLabel('invoice_text1')) {
+            $data[$account->present()->customLabel('invoice_text1')] = [];
+        }
+        if ($account->customLabel('invoice_text2')) {
+            $data[$account->present()->customLabel('invoice_text2')] = [];
+        }
+
+        if ($user->hasPermission(['view_client', 'view_invoice'], true)) {
+            $clients = Client::scope()
+                ->with('contacts', 'invoices')
+                ->withTrashed()
+                ->with([
+                    'contacts',
+                    'invoices' => function ($query) use ($user) {
+                        $query->withTrashed();
+                    }
+                ])->get();
+        } else {
+            $clients = Client::scope()
+                ->where('user_id', '=', $user->id)
+                ->withTrashed()
+                ->with([
+                    'contacts',
+                    'invoices' => function ($query) use ($user) {
+                        $query->withTrashed()
+                            ->where('user_id', '=', $user->id);
+                    }
+                ])->get();
+        }
+
+        foreach ($clients as $client) {
+            if (!$client->is_deleted) {
+                if ($client->name) {
+                    $data['clients'][] = [
+                        'value' => ($client->id_number ? $client->id_number . ': ' : '') . $client->name,
+                        'tokens' => implode(',',
+                            [$client->name, $client->id_number, $client->vat_number, $client->work_phone]),
+                        'url' => $client->present()->url,
+                    ];
+                }
+
+                if ($client->custom_value1) {
+                    $data[$account->present()->customLabel('client1')][] = [
+                        'value' => "{$client->custom_value1}: " . $client->getDisplayName(),
+                        'tokens' => $client->custom_value1,
+                        'url' => $client->present()->url,
+                    ];
+                }
+                if ($client->custom_value2) {
+                    $data[$account->present()->customLabel('client2')][] = [
+                        'value' => "{$client->custom_value2}: " . $client->getDisplayName(),
+                        'tokens' => $client->custom_value2,
+                        'url' => $client->present()->url,
+                    ];
+                }
+
+                foreach ($client->contacts as $contact) {
+                    $data['contacts'][] = [
+                        'value' => $contact->getSearchName(),
+                        'tokens' => implode(',',
+                            [$contact->first_name, $contact->last_name, $contact->email, $contact->phone]),
+                        'url' => $client->present()->url,
+                    ];
+                }
+            }
+
+            foreach ($client->invoices as $invoice) {
+                $entityType = $invoice->getEntityType();
+                $data["{$entityType}s"][] = [
+                    'value' => $invoice->getDisplayName() . ': ' . $client->getDisplayName(),
+                    'tokens' => implode(',', [$invoice->invoice_number, $invoice->po_number]),
+                    'url' => $invoice->present()->url,
+                ];
+
+                if ($customValue = $invoice->custom_text_value1) {
+                    $data[$account->present()->customLabel('invoice_text1')][] = [
+                        'value' => "{$customValue}: {$invoice->getDisplayName()}",
+                        'tokens' => $customValue,
+                        'url' => $invoice->present()->url,
+                    ];
+                }
+                if ($customValue = $invoice->custom_text_value2) {
+                    $data[$account->present()->customLabel('invoice_text2')][] = [
+                        'value' => "{$customValue}: {$invoice->getDisplayName()}",
+                        'tokens' => $customValue,
+                        'url' => $invoice->present()->url,
+                    ];
+                }
+            }
+        }
+
+        return $data;
+    }
+
+    private function getNavigationSearchData()
+    {
+        $entityTypes = [
+            ENTITY_INVOICE,
+            ENTITY_CLIENT,
+            ENTITY_QUOTE,
+            ENTITY_TASK,
+            ENTITY_EXPENSE,
+            ENTITY_EXPENSE_CATEGORY,
+            ENTITY_VENDOR,
+            ENTITY_RECURRING_INVOICE,
+            ENTITY_RECURRING_QUOTE,
+            ENTITY_PAYMENT,
+            ENTITY_CREDIT,
+            ENTITY_PROJECT,
+            ENTITY_PROPOSAL,
+        ];
+
+        foreach ($entityTypes as $entityType) {
+            $features[] = [
+                "new_{$entityType}",
+                Utils::pluralizeEntityType($entityType) . '/create',
+            ];
+            $features[] = [
+                'list_' . Utils::pluralizeEntityType($entityType),
+                Utils::pluralizeEntityType($entityType),
+            ];
+        }
+
+        $features = array_merge($features, [
+            ['dashboard', '/dashboard'],
+            ['reports', '/reports'],
+            ['calendar', '/calendar'],
+            ['kanban', '/tasks/kanban'],
+            ['customize_design', '/settings/customize_design'],
+            ['new_tax_rate', '/tax_rates/create'],
+            ['new_product', '/products/create'],
+            ['new_user', '/users/create'],
+            ['custom_fields', '/settings/invoice_settings'],
+            ['invoice_number', '/settings/invoice_settings'],
+            ['buy_now_buttons', '/settings/client_portal#buy_now'],
+            ['invoice_fields', '/settings/invoice_design#invoice_fields'],
+        ]);
+
+        $settings = array_merge(Account::$basicSettings, Account::$advancedSettings);
+
+        if (!Utils::isNinjaProd()) {
+            $settings[] = ACCOUNT_SYSTEM_SETTINGS;
+        }
+
+        foreach ($settings as $setting) {
+            $features[] = [
+                $setting,
+                "/settings/{$setting}",
+            ];
+        }
+
+        foreach ($features as $feature) {
+            $data[] = [
+                'value' => trans('texts.' . $feature[0]),
+                'tokens' => trans('texts.' . $feature[0]),
+                'url' => URL::to($feature[1]),
+            ];
+        }
+
+        return $data;
     }
 }

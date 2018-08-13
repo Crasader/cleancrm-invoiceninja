@@ -16,8 +16,8 @@ class CustomerRepository extends BaseRepository
     public function all()
     {
         return AccountGatewayToken::whereAccountId(auth()->user()->account_id)
-                    ->with(['contact'])
-                    ->get();
+            ->with(['contact'])
+            ->get();
     }
 
     public function save($data)

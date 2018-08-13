@@ -55,6 +55,15 @@ class CalculatePayouts extends Command
         }
     }
 
+    protected function getOptions()
+    {
+        return [
+            ['type', null, InputOption::VALUE_OPTIONAL, 'Type', null],
+            ['url', null, InputOption::VALUE_OPTIONAL, 'Url', null],
+            ['password', null, InputOption::VALUE_OPTIONAL, 'Password', null],
+        ];
+    }
+
     private function referralPayouts()
     {
         $servers = DbServer::orderBy('id')->get(['name']);
@@ -107,15 +116,6 @@ class CalculatePayouts extends Command
 
         $this->info('Response:');
         $this->info($response);
-    }
-
-    protected function getOptions()
-    {
-        return [
-            ['type', null, InputOption::VALUE_OPTIONAL, 'Type', null],
-            ['url', null, InputOption::VALUE_OPTIONAL, 'Url', null],
-            ['password', null, InputOption::VALUE_OPTIONAL, 'Password', null],
-        ];
     }
 
 }

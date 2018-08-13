@@ -52,8 +52,8 @@ class VendorApiController extends BaseAPIController
     public function index()
     {
         $vendors = Vendor::scope()
-                    ->withTrashed()
-                    ->orderBy('created_at', 'desc');
+            ->withTrashed()
+            ->orderBy('created_at', 'desc');
 
         return $this->listResponse($vendors);
     }
@@ -113,8 +113,8 @@ class VendorApiController extends BaseAPIController
         $vendor = $this->vendorRepo->save($request->input());
 
         $vendor = Vendor::scope($vendor->public_id)
-                    ->with('country', 'vendor_contacts', 'industry', 'size', 'currency')
-                    ->first();
+            ->with('country', 'vendor_contacts', 'industry', 'size', 'currency')
+            ->first();
 
         return $this->itemResponse($vendor);
     }

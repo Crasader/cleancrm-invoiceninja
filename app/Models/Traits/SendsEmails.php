@@ -65,11 +65,12 @@ trait SendsEmails
         $template = '<div>$client,</div><br />';
 
         if ($this->hasFeature(FEATURE_CUSTOM_EMAILS) && $this->account_email_settings->email_design_id != EMAIL_DESIGN_PLAIN) {
-            $template .= '<div>' . trans("texts.{$entityType}_message_button", ['amount' => '$amount']) . '</div><br />' .
-                         '<div style="text-align:center;">$viewButton</div><br />';
+            $template .= '<div>' . trans("texts.{$entityType}_message_button",
+                    ['amount' => '$amount']) . '</div><br />' .
+                '<div style="text-align:center;">$viewButton</div><br />';
         } else {
             $template .= '<div>' . trans("texts.{$entityType}_message", ['amount' => '$amount']) . '</div><br />' .
-                         '<div>$viewLink</div><br />';
+                '<div>$viewLink</div><br />';
         }
 
         if ($message) {
@@ -94,7 +95,7 @@ trait SendsEmails
             $template = $this->account_email_settings->$field;
         }
 
-        if (! $template) {
+        if (!$template) {
             $template = $this->getDefaultEmailTemplate($entityType, $message);
         }
 
@@ -136,7 +137,7 @@ trait SendsEmails
      */
     public function getReminderDate($reminder, $filterEnabled = true)
     {
-        if ($filterEnabled && ! $this->account_email_settings->{"enable_reminder{$reminder}"}) {
+        if ($filterEnabled && !$this->account_email_settings->{"enable_reminder{$reminder}"}) {
             return false;
         }
 
@@ -198,7 +199,7 @@ trait SendsEmails
 
     public function getFromEmail()
     {
-        if (! $this->isPro() || ! Utils::isNinja() || Utils::isReseller()) {
+        if (!$this->isPro() || !Utils::isNinja() || Utils::isReseller()) {
             return false;
         }
 

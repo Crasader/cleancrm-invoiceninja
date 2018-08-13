@@ -12,7 +12,7 @@ class CreateProductIntent extends ProductIntent
     public function process()
     {
         $url = '/products/create';
-        
+
         //$url = '/invoices/create/' . $clientPublicId . '?';
         //$url .= $this->requestFieldsAsString(Invoice::$requestFields);
 

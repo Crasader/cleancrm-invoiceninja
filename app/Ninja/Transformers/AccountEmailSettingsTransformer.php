@@ -9,7 +9,7 @@ use App\Models\AccountEmailSettings;
  */
 class AccountEmailSettingsTransformer extends EntityTransformer
 {
-	  /**
+    /**
      * @SWG\Property(property="reply_to_email", type="string", example="Reply To Email")
      * @SWG\Property(property="bcc_email", type="string", example="Bcc Email")
      * @SWG\Property(property="email_subject_invoice", type="string", example="Email Subject Invoice")
@@ -100,14 +100,14 @@ class AccountEmailSettingsTransformer extends EntityTransformer
             'num_days_reminder1' => $settings->num_days_reminder1,
             'num_days_reminder2' => $settings->num_days_reminder2,
             'num_days_reminder3' => $settings->num_days_reminder3,
-            'direction_reminder1' => (int) $settings->direction_reminder1,
-            'direction_reminder2' => (int) $settings->direction_reminder2,
-            'direction_reminder3' => (int) $settings->direction_reminder3,
-            'field_reminder1' => (int) $settings->field_reminder1,
-            'field_reminder2' => (int) $settings->field_reminder2,
-            'field_reminder3' => (int) $settings->field_reminder3,
+            'direction_reminder1' => (int)$settings->direction_reminder1,
+            'direction_reminder2' => (int)$settings->direction_reminder2,
+            'direction_reminder3' => (int)$settings->direction_reminder3,
+            'field_reminder1' => (int)$settings->field_reminder1,
+            'field_reminder2' => (int)$settings->field_reminder2,
+            'field_reminder3' => (int)$settings->field_reminder3,
             'email_design_id' => $settings->email_design_id,
-            'enable_email_markup' => (bool) $settings->enable_email_markup,
+            'enable_email_markup' => (bool)$settings->enable_email_markup,
             'email_footer' => $settings->email_footer,
         ];
     }

@@ -33,9 +33,9 @@ class InvoiceService extends BaseService
     /**
      * InvoiceService constructor.
      *
-     * @param ClientRepository  $clientRepo
+     * @param ClientRepository $clientRepo
      * @param InvoiceRepository $invoiceRepo
-     * @param DatatableService  $datatableService
+     * @param DatatableService $datatableService
      */
     public function __construct(
         ClientRepository $clientRepo,
@@ -45,14 +45,6 @@ class InvoiceService extends BaseService
         $this->clientRepo = $clientRepo;
         $this->invoiceRepo = $invoiceRepo;
         $this->datatableService = $datatableService;
-    }
-
-    /**
-     * @return InvoiceRepository
-     */
-    protected function getRepo()
-    {
-        return $this->invoiceRepo;
     }
 
     /**
@@ -73,7 +65,7 @@ class InvoiceService extends BaseService
     }
 
     /**
-     * @param array        $data
+     * @param array $data
      * @param Invoice|null $invoice
      *
      * @return \App\Models\Invoice|Invoice|mixed
@@ -130,7 +122,7 @@ class InvoiceService extends BaseService
     {
         $account = $quote->account;
 
-        if (! $account->hasFeature(FEATURE_QUOTES) || ! $quote->isType(INVOICE_TYPE_QUOTE) || $quote->quote_invoice_id) {
+        if (!$account->hasFeature(FEATURE_QUOTES) || !$quote->isType(INVOICE_TYPE_QUOTE) || $quote->quote_invoice_id) {
             return null;
         }
 
@@ -161,12 +153,21 @@ class InvoiceService extends BaseService
         $datatable->entityType = $entityType;
 
         $query = $this->invoiceRepo->getInvoices($accountId, $clientPublicId, $entityType, $search)
-                    ->where('invoices.invoice_type_id', '=', $entityType == ENTITY_QUOTE ? INVOICE_TYPE_QUOTE : INVOICE_TYPE_STANDARD);
+            ->where('invoices.invoice_type_id', '=',
+                $entityType == ENTITY_QUOTE ? INVOICE_TYPE_QUOTE : INVOICE_TYPE_STANDARD);
 
-        if (! Utils::hasPermission('view_' . $entityType)) {
+        if (!Utils::hasPermission('view_' . $entityType)) {
             $query->where('invoices.user_id', '=', Auth::user()->id);
         }
 
         return $this->datatableService->createDatatable($datatable, $query);
+    }
+
+    /**
+     * @return InvoiceRepository
+     */
+    protected function getRepo()
+    {
+        return $this->invoiceRepo;
     }
 }

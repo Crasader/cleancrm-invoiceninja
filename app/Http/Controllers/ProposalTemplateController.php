@@ -21,8 +21,10 @@ class ProposalTemplateController extends BaseController
     protected $proposalTemplateService;
     protected $entityType = ENTITY_PROPOSAL_TEMPLATE;
 
-    public function __construct(ProposalTemplateRepository $proposalTemplateRepo, ProposalTemplateService $proposalTemplateService)
-    {
+    public function __construct(
+        ProposalTemplateRepository $proposalTemplateRepo,
+        ProposalTemplateService $proposalTemplateService
+    ) {
         $this->proposalTemplateRepo = $proposalTemplateRepo;
         $this->proposalTemplateService = $proposalTemplateService;
     }
@@ -71,13 +73,13 @@ class ProposalTemplateController extends BaseController
         $defaultLabel = trans('texts.default');
 
         foreach ($customTemplates as $template) {
-            if (! isset($options[$customLabel])) {
+            if (!isset($options[$customLabel])) {
                 $options[$customLabel] = [];
             }
             $options[trans('texts.custom')][$template->public_id] = $template->name;
         }
         foreach ($defaultTemplates as $template) {
-            if (! isset($options[$defaultLabel])) {
+            if (!isset($options[$defaultLabel])) {
                 $options[$defaultLabel] = [];
             }
             $options[trans('texts.default')][$template->public_id] = $template->name;

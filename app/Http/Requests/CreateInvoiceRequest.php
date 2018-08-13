@@ -16,14 +16,15 @@ class CreateInvoiceRequest extends InvoiceRequest
     {
 
 
-        if (request()->input('is_quote'))
+        if (request()->input('is_quote')) {
             return $this->user()->can('create', ENTITY_QUOTE);
-        else {
+        } else {
 
-            if(request()->input('is_recurring'))
+            if (request()->input('is_recurring')) {
                 $standardOrRecurringInvoice = ENTITY_RECURRING_INVOICE;
-            else
+            } else {
                 $standardOrRecurringInvoice = ENTITY_INVOICE;
+            }
 
             return $this->user()->can('create', $standardOrRecurringInvoice);
         }
@@ -50,7 +51,7 @@ class CreateInvoiceRequest extends InvoiceRequest
 
         if ($this->user()->account->client_number_counter) {
             $clientId = Client::getPrivateId(request()->input('client')['public_id']);
-            $rules['client.id_number'] = 'unique:clients,id_number,'.$clientId.',id,account_id,' . $this->user()->account_id;
+            $rules['client.id_number'] = 'unique:clients,id_number,' . $clientId . ',id,account_id,' . $this->user()->account_id;
         }
 
         /* There's a problem parsing the dates

@@ -23,7 +23,7 @@ class ExportReportResults extends Job
      */
     public function handle()
     {
-        if (! $this->user->hasPermission('view_reports')) {
+        if (!$this->user->hasPermission('view_reports')) {
             return false;
         }
 
@@ -31,22 +31,22 @@ class ExportReportResults extends Job
         $reportType = $this->reportType;
         $params = $this->params;
 
-        $data    = $params['displayData'];
+        $data = $params['displayData'];
         $columns = $params['columns'];
-        $totals  = $params['reportTotals'];
-        $report  = $params['report'];
+        $totals = $params['reportTotals'];
+        $report = $params['report'];
 
-        $filename = "{$params['startDate']}-{$params['endDate']}_invoiceninja-".strtolower(Utils::normalizeChars(trans("texts.$reportType")))."-report";
+        $filename = "{$params['startDate']}-{$params['endDate']}_invoiceninja-" . strtolower(Utils::normalizeChars(trans("texts.$reportType"))) . "-report";
 
         $formats = ['csv', 'pdf', 'xlsx', 'zip'];
-        if (! in_array($format, $formats)) {
+        if (!in_array($format, $formats)) {
             throw new \Exception("Invalid format request to export report");
         }
 
         //Get labeled header
         $data = array_merge(
             [
-                array_map(function($col) {
+                array_map(function ($col) {
                     return $col['label'];
                 }, $report->tableHeaderArray())
             ],
@@ -64,8 +64,9 @@ class ExportReportResults extends Job
 
         foreach ($totals as $currencyId => $each) {
             foreach ($each as $dimension => $val) {
-                $tmp   = [];
-                $tmp[] = Utils::getFromCache($currencyId, 'currencies')->name . (($dimension) ? ' - ' . $dimension : '');
+                $tmp = [];
+                $tmp[] = Utils::getFromCache($currencyId,
+                        'currencies')->name . (($dimension) ? ' - ' . $dimension : '');
                 foreach ($val as $field => $value) {
                     if ($field == 'duration') {
                         $tmp[] = Utils::formatTime($value);
@@ -77,9 +78,9 @@ class ExportReportResults extends Job
             }
         }
 
-        return Excel::create($filename, function($excel) use($report, $data, $reportType, $format, $summary) {
+        return Excel::create($filename, function ($excel) use ($report, $data, $reportType, $format, $summary) {
 
-            $excel->sheet(trans("texts.$reportType"), function($sheet) use($report, $data, $format, $summary) {
+            $excel->sheet(trans("texts.$reportType"), function ($sheet) use ($report, $data, $format, $summary) {
                 $sheet->setOrientation('landscape');
                 $sheet->freezeFirstRow();
                 if ($format == 'pdf') {
@@ -93,7 +94,7 @@ class ExportReportResults extends Job
                 }
 
                 // Styling header
-                $sheet->cells('A1:'.Utils::num2alpha(count($data[0])-1).'1', function($cells) {
+                $sheet->cells('A1:' . Utils::num2alpha(count($data[0]) - 1) . '1', function ($cells) {
                     $cells->setBackground('#777777');
                     $cells->setFontColor('#FFFFFF');
                     $cells->setFontSize(13);
@@ -104,7 +105,7 @@ class ExportReportResults extends Job
             });
 
             if (count($summary)) {
-                $excel->sheet(trans("texts.totals"), function($sheet) use($report, $summary, $format) {
+                $excel->sheet(trans("texts.totals"), function ($sheet) use ($report, $summary, $format) {
                     $sheet->setOrientation('landscape');
                     $sheet->freezeFirstRow();
 
@@ -114,7 +115,7 @@ class ExportReportResults extends Job
                     $sheet->rows($summary);
 
                     // Styling header
-                    $sheet->cells('A1:'.Utils::num2alpha(count($summary[0])-1).'1', function($cells) {
+                    $sheet->cells('A1:' . Utils::num2alpha(count($summary[0]) - 1) . '1', function ($cells) {
                         $cells->setBackground('#777777');
                         $cells->setFontColor('#FFFFFF');
                         $cells->setFontSize(13);

@@ -28,14 +28,14 @@ trait HasRecurrence
      */
     public function shouldSendTodayOld()
     {
-        if (! $this->user->confirmed) {
+        if (!$this->user->confirmed) {
             return false;
         }
 
         $account = $this->account;
         $timezone = $account->getTimezone();
 
-        if (! $this->start_date || Carbon::parse($this->start_date, $timezone)->isFuture()) {
+        if (!$this->start_date || Carbon::parse($this->start_date, $timezone)->isFuture()) {
             return false;
         }
 
@@ -43,7 +43,7 @@ trait HasRecurrence
             return false;
         }
 
-        if (! $this->last_sent_date) {
+        if (!$this->last_sent_date) {
             return true;
         } else {
             $date1 = new DateTime($this->last_sent_date);
@@ -93,14 +93,14 @@ trait HasRecurrence
 
     public function shouldSendTodayNew()
     {
-        if (! $this->user->confirmed) {
+        if (!$this->user->confirmed) {
             return false;
         }
 
         $account = $this->account;
         $timezone = $account->getTimezone();
 
-        if (! $this->start_date || Carbon::parse($this->start_date, $timezone)->isFuture()) {
+        if (!$this->start_date || Carbon::parse($this->start_date, $timezone)->isFuture()) {
             return false;
         }
 
@@ -108,7 +108,7 @@ trait HasRecurrence
             return false;
         }
 
-        if (! $this->last_sent_date) {
+        if (!$this->last_sent_date) {
             return true;
         } else {
             // check we don't send a few hours early due to timezone difference
@@ -118,7 +118,7 @@ trait HasRecurrence
 
             $nextSendDate = $this->getNextSendDate();
 
-            if (! $nextSendDate) {
+            if (!$nextSendDate) {
                 return false;
             }
 
@@ -133,7 +133,7 @@ trait HasRecurrence
      */
     public function getSchedule()
     {
-        if (! $this->start_date || ! $this->frequency_id) {
+        if (!$this->start_date || !$this->frequency_id) {
             return false;
         }
 
@@ -165,17 +165,17 @@ trait HasRecurrence
     public function getNextSendDate()
     {
         // expenses don't have an is_public flag
-        if ($this->is_recurring && ! $this->is_public) {
+        if ($this->is_recurring && !$this->is_public) {
             return null;
         }
 
-        if ($this->start_date && ! $this->last_sent_date) {
+        if ($this->start_date && !$this->last_sent_date) {
             $startDate = $this->getOriginal('start_date') . ' ' . $this->account->recurring_hour . ':00:00';
 
             return $this->account->getDateTime($startDate);
         }
 
-        if (! $schedule = $this->getSchedule()) {
+        if (!$schedule = $this->getSchedule()) {
             return null;
         }
 

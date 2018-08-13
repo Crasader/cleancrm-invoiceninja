@@ -18,7 +18,7 @@ class PaymentTransformer extends BaseTransformer
     public function transform($data)
     {
         return new Item($data, function ($data) {
-            if (! empty($data->payment_date)) {
+            if (!empty($data->payment_date)) {
                 $paymentDate = $this->getDate($data, 'payment_date');
             } else {
                 $paymentDate = isset($data->invoice_date) ? $data->invoice_date : null;

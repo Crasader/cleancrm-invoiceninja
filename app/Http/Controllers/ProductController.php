@@ -99,18 +99,18 @@ class ProductController extends BaseController
             $url = 'products';
             $method = 'POST';
         } else {
-            $url = 'products/'.$publicId;
+            $url = 'products/' . $publicId;
             $method = 'PUT';
         }
 
         $data = [
-          'account' => $account,
-          'taxRates' => $account->invoice_item_taxes ? TaxRate::scope()->whereIsInclusive(false)->get() : null,
-          'product' => $product,
-          'entity' => $product,
-          'method' => $method,
-          'url' => $url,
-          'title' => trans('texts.edit_product'),
+            'account' => $account,
+            'taxRates' => $account->invoice_item_taxes ? TaxRate::scope()->whereIsInclusive(false)->get() : null,
+            'product' => $product,
+            'entity' => $product,
+            'method' => $method,
+            'url' => $url,
+            'title' => trans('texts.edit_product'),
         ];
 
         return View::make('accounts.product', $data);
@@ -125,12 +125,16 @@ class ProductController extends BaseController
         $account = Auth::user()->account;
 
         $data = [
-          'account' => $account,
-          'taxRates' => $account->invoice_item_taxes ? TaxRate::scope()->whereIsInclusive(false)->get(['id', 'name', 'rate']) : null,
-          'product' => null,
-          'method' => 'POST',
-          'url' => 'products',
-          'title' => trans('texts.create_product'),
+            'account' => $account,
+            'taxRates' => $account->invoice_item_taxes ? TaxRate::scope()->whereIsInclusive(false)->get([
+                'id',
+                'name',
+                'rate'
+            ]) : null,
+            'product' => null,
+            'method' => 'POST',
+            'url' => 'products',
+            'title' => trans('texts.create_product'),
         ];
 
         return View::make('accounts.product', $data);
@@ -152,6 +156,31 @@ class ProductController extends BaseController
     public function update(UpdateProductRequest $request, $publicId)
     {
         return $this->save($publicId);
+    }
+
+    /**
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function bulk()
+    {
+        $action = Input::get('action');
+        $ids = Input::get('public_id') ? Input::get('public_id') : Input::get('ids');
+
+        if ($action == 'invoice') {
+            $products = Product::scope($ids)->get();
+            $data = [];
+            foreach ($products as $product) {
+                $data[] = $product->product_key;
+            }
+            return redirect("invoices/create")->with('selectedProducts', $data);
+        } else {
+            $count = $this->productService->bulk($ids, $action);
+        }
+
+        $message = Utils::pluralize($action . 'd_product', $count);
+        Session::flash('message', $message);
+
+        return $this->returnBulk(ENTITY_PRODUCT, $action, $ids);
     }
 
     /**
@@ -182,30 +211,5 @@ class ProductController extends BaseController
         } else {
             return redirect()->to("products/{$product->public_id}/edit");
         }
-    }
-
-    /**
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function bulk()
-    {
-        $action = Input::get('action');
-        $ids = Input::get('public_id') ? Input::get('public_id') : Input::get('ids');
-
-        if ($action == 'invoice') {
-            $products = Product::scope($ids)->get();
-            $data = [];
-            foreach ($products as $product) {
-                $data[] = $product->product_key;
-            }
-            return redirect("invoices/create")->with('selectedProducts', $data);
-        } else {
-            $count = $this->productService->bulk($ids, $action);
-        }
-
-        $message = Utils::pluralize($action.'d_product', $count);
-        Session::flash('message', $message);
-
-        return $this->returnBulk(ENTITY_PRODUCT, $action, $ids);
     }
 }

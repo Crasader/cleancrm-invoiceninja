@@ -23,7 +23,7 @@ class AuthController extends Controller
      * Create a new authentication controller instance.
      *
      * @param AccountRepository $repo
-     * @param AuthService       $authService
+     * @param AuthService $authService
      *
      * @internal param \Illuminate\Contracts\Auth\Guard $auth
      * @internal param \Illuminate\Contracts\Auth\Registrar $registrar

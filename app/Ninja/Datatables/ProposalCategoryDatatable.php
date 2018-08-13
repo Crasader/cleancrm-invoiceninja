@@ -17,10 +17,11 @@ class ProposalCategoryDatatable extends EntityDatatable
             [
                 'name',
                 function ($model) {
-                    if (Auth::user()->can('view', [ENTITY_PROPOSAL_CATEGORY, $model]) )
+                    if (Auth::user()->can('view', [ENTITY_PROPOSAL_CATEGORY, $model])) {
                         return link_to("proposals/categories/{$model->public_id}/edit", $model->name)->toHtml();
-                    else
+                    } else {
                         return $model->name;
+                    }
 
                 },
             ],

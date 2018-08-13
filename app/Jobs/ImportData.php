@@ -44,8 +44,8 @@ class ImportData extends Job implements ShouldQueue
     /**
      * Create a new job instance.
      *
-     * @param mixed   $files
-     * @param mixed   $settings
+     * @param mixed $files
+     * @param mixed $settings
      */
     public function __construct(User $user, $type, $settings)
     {

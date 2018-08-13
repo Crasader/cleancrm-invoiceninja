@@ -25,8 +25,12 @@ class UserController extends BaseController
     protected $userMailer;
     protected $userService;
 
-    public function __construct(AccountRepository $accountRepo, ContactMailer $contactMailer, UserMailer $userMailer, UserService $userService)
-    {
+    public function __construct(
+        AccountRepository $accountRepo,
+        ContactMailer $contactMailer,
+        UserMailer $userMailer,
+        UserService $userService
+    ) {
         //parent::__construct();
 
         $this->accountRepo = $accountRepo;
@@ -59,7 +63,7 @@ class UserController extends BaseController
     /**
      * Display the specified resource.
      *
-     * @param int   $id
+     * @param int $id
      * @param mixed $publicId
      *
      * @return Response
@@ -74,14 +78,14 @@ class UserController extends BaseController
     public function edit($publicId)
     {
         $user = User::where('account_id', '=', Auth::user()->account_id)
-                        ->where('public_id', '=', $publicId)
-                        ->withTrashed()
-                        ->firstOrFail();
+            ->where('public_id', '=', $publicId)
+            ->withTrashed()
+            ->firstOrFail();
 
         $data = [
             'user' => $user,
             'method' => 'PUT',
-            'url' => 'users/'.$publicId,
+            'url' => 'users/' . $publicId,
         ];
 
         return View::make('users.edit', $data);
@@ -102,28 +106,29 @@ class UserController extends BaseController
      */
     public function create()
     {
-        if (! Auth::user()->registered) {
+        if (!Auth::user()->registered) {
             Session::flash('error', trans('texts.register_to_add_user'));
 
             return Redirect::to('settings/' . ACCOUNT_USER_MANAGEMENT);
         }
 
-        if (! Auth::user()->confirmed) {
-            Session::flash('error', trans('texts.confirmation_required', ['link' => link_to('/resend_confirmation', trans('texts.click_here'))]));
+        if (!Auth::user()->confirmed) {
+            Session::flash('error', trans('texts.confirmation_required',
+                ['link' => link_to('/resend_confirmation', trans('texts.click_here'))]));
 
             return Redirect::to('settings/' . ACCOUNT_USER_MANAGEMENT);
         }
 
-        if (Utils::isNinja() && ! Auth::user()->caddAddUsers()) {
+        if (Utils::isNinja() && !Auth::user()->caddAddUsers()) {
             Session::flash('error', trans('texts.max_users_reached'));
 
             return Redirect::to('settings/' . ACCOUNT_USER_MANAGEMENT);
         }
 
         $data = [
-          'user' => null,
-          'method' => 'POST',
-          'url' => 'users',
+            'user' => null,
+            'method' => 'POST',
+            'url' => 'users',
         ];
 
         return View::make('users.edit', $data);
@@ -135,14 +140,14 @@ class UserController extends BaseController
         $id = Input::get('bulk_public_id');
 
         $user = User::where('account_id', '=', Auth::user()->account_id)
-                    ->where('public_id', '=', $id)
-                    ->withTrashed()
-                    ->firstOrFail();
+            ->where('public_id', '=', $id)
+            ->withTrashed()
+            ->firstOrFail();
 
         if ($action === 'archive') {
             $user->delete();
         } else {
-            if (! Auth::user()->caddAddUsers()) {
+            if (!Auth::user()->caddAddUsers()) {
                 return Redirect::to('settings/' . ACCOUNT_USER_MANAGEMENT)
                     ->with('error', trans('texts.max_users_reached'));
             }
@@ -163,7 +168,7 @@ class UserController extends BaseController
     public function save($userPublicId = false)
     {
 
-        if (! Auth::user()->hasFeature(FEATURE_USERS)) {
+        if (!Auth::user()->hasFeature(FEATURE_USERS)) {
             return Redirect::to('settings/' . ACCOUNT_USER_MANAGEMENT);
         }
 
@@ -174,11 +179,11 @@ class UserController extends BaseController
 
         if ($userPublicId) {
             $user = User::where('account_id', '=', Auth::user()->account_id)
-                        ->where('public_id', '=', $userPublicId)
-                        ->withTrashed()
-                        ->firstOrFail();
+                ->where('public_id', '=', $userPublicId)
+                ->withTrashed()
+                ->firstOrFail();
 
-            $rules['email'] = 'required|email|unique:users,email,'.$user->id.',id';
+            $rules['email'] = 'required|email|unique:users,email,' . $user->id . ',id';
         } else {
             $user = false;
             $rules['email'] = 'required|email|unique:users';
@@ -188,11 +193,11 @@ class UserController extends BaseController
 
         if ($validator->fails()) {
             return Redirect::to($userPublicId ? 'users/edit' : 'users/create')
-                        ->withErrors($validator)
-                        ->withInput();
+                ->withErrors($validator)
+                ->withInput();
         }
 
-        if (! \App\Models\LookupUser::validateField('email', Input::get('email'), $user)) {
+        if (!\App\Models\LookupUser::validateField('email', Input::get('email'), $user)) {
             return Redirect::to($userPublicId ? 'users/edit' : 'users/create')
                 ->withError(trans('texts.email_taken'))
                 ->withInput();
@@ -209,7 +214,7 @@ class UserController extends BaseController
             }
         } else {
             $lastUser = User::withTrashed()->where('account_id', '=', Auth::user()->account_id)
-                        ->orderBy('public_id', 'DESC')->first();
+                ->orderBy('public_id', 'DESC')->first();
 
             $user = new User();
             $user->account_id = Auth::user()->account_id;
@@ -229,7 +234,7 @@ class UserController extends BaseController
 
         $user->save();
 
-        if (! $user->confirmed && Input::get('action') === 'email') {
+        if (!$user->confirmed && Input::get('action') === 'email') {
             $this->userMailer->sendConfirmation($user, Auth::user());
             $message = trans('texts.sent_invite');
         } else {
@@ -241,16 +246,10 @@ class UserController extends BaseController
         return Redirect::to('users/' . $user->public_id . '/edit');
     }
 
-    private function formatUserPermissions(array $permissions) {
-
-        return json_encode(array_diff(array_values($permissions),[0]));
-
-    }
-
     public function sendConfirmation($userPublicId)
     {
         $user = User::where('account_id', '=', Auth::user()->account_id)
-                    ->where('public_id', '=', $userPublicId)->firstOrFail();
+            ->where('public_id', '=', $userPublicId)->firstOrFail();
 
         $this->userMailer->sendConfirmation($user, Auth::user());
         Session::flash('message', trans('texts.sent_invite'));
@@ -304,7 +303,7 @@ class UserController extends BaseController
     public function changePassword()
     {
         // check the current password is correct
-        if (! Auth::validate([
+        if (!Auth::validate([
             'email' => Auth::user()->email,
             'password' => Input::get('current_password'),
         ])) {
@@ -357,7 +356,7 @@ class UserController extends BaseController
     {
         $user = $this->accountRepo->findUser(Auth::user(), $accountKey);
 
-        if (! $user) {
+        if (!$user) {
             return redirect()->to('/');
         }
 
@@ -412,5 +411,12 @@ class UserController extends BaseController
         }
 
         return redirect($referer)->withMessage($message);
+    }
+
+    private function formatUserPermissions(array $permissions)
+    {
+
+        return json_encode(array_diff(array_values($permissions), [0]));
+
     }
 }

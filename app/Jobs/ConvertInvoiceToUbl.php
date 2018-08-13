@@ -119,7 +119,7 @@ class ConvertInvoiceToUbl extends Job
             ->setItem((new Item())
                 ->setName($item->product_key)
                 ->setDescription($item->description));
-                //->setSellersItemIdentification("1ABCD"));
+        //->setSellersItemIdentification("1ABCD"));
 
         $taxtotal = new TaxTotal();
         $itemTaxAmount1 = $itemTaxAmount2 = 0;
@@ -142,13 +142,13 @@ class ConvertInvoiceToUbl extends Job
         $taxScheme = ((new TaxScheme()))->setId($taxName);
 
         $taxtotal->addTaxSubTotal((new TaxSubTotal())
-                ->setTaxAmount($taxAmount)
-                ->setTaxableAmount($taxable)
-                ->setTaxCategory((new TaxCategory())
-                    ->setId($taxName)
-                    ->setName($taxName)
-                    ->setTaxScheme($taxScheme)
-                    ->setPercent($taxRate)));
+            ->setTaxAmount($taxAmount)
+            ->setTaxableAmount($taxable)
+            ->setTaxCategory((new TaxCategory())
+                ->setId($taxName)
+                ->setName($taxName)
+                ->setTaxScheme($taxScheme)
+                ->setPercent($taxRate)));
 
         return $taxAmount;
     }

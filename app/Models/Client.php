@@ -161,7 +161,8 @@ class Client extends EntityModel
      */
     public function publicQuotes()
     {
-        return $this->hasMany('App\Models\Invoice')->where('invoice_type_id', '=', INVOICE_TYPE_QUOTE)->whereIsPublic(true);
+        return $this->hasMany('App\Models\Invoice')->where('invoice_type_id', '=',
+            INVOICE_TYPE_QUOTE)->whereIsPublic(true);
     }
 
     /**
@@ -272,7 +273,7 @@ class Client extends EntityModel
 
         // check if this client wasRecentlyCreated to ensure a new contact is
         // always created even if the request includes a contact id
-        if (! $this->wasRecentlyCreated && $publicId && intval($publicId) > 0) {
+        if (!$this->wasRecentlyCreated && $publicId && intval($publicId) > 0) {
             $contact = Contact::scope($publicId)->whereClientId($this->id)->firstOrFail();
         } else {
             $contact = Contact::createNew();
@@ -286,7 +287,7 @@ class Client extends EntityModel
         }
 
         if ($this->account->isClientPortalPasswordEnabled()) {
-            if (! empty($data['password']) && $data['password'] != '-%unchanged%-') {
+            if (!empty($data['password']) && $data['password'] != '-%unchanged%-') {
                 $contact->password = bcrypt($data['password']);
             } elseif (empty($data['password'])) {
                 $contact->password = null;
@@ -330,9 +331,9 @@ class Client extends EntityModel
     public function getTotalCredit()
     {
         return DB::table('credits')
-                ->where('client_id', '=', $this->id)
-                ->whereNull('deleted_at')
-                ->sum('balance');
+            ->where('client_id', '=', $this->id)
+            ->whereNull('deleted_at')
+            ->sum('balance');
     }
 
     /**
@@ -348,7 +349,7 @@ class Client extends EntityModel
      */
     public function getPrimaryContact()
     {
-        if (! $this->relationLoaded('contacts')) {
+        if (!$this->relationLoaded('contacts')) {
             $this->load('contacts');
         }
 
@@ -368,8 +369,10 @@ class Client extends EntityModel
     {
         if ($this->name) {
             return $this->name;
-        } else if ($contact = $this->getPrimaryContact()) {
-            return $contact->getDisplayName();
+        } else {
+            if ($contact = $this->getPrimaryContact()) {
+                return $contact->getDisplayName();
+            }
         }
     }
 
@@ -467,7 +470,7 @@ class Client extends EntityModel
     {
         $accountGateway = $this->account->getGatewayByType(GATEWAY_TYPE_TOKEN);
 
-        if (! $accountGateway) {
+        if (!$accountGateway) {
             return false;
         }
 
@@ -519,7 +522,7 @@ class Client extends EntityModel
             return $this->currency_id;
         }
 
-        if (! $this->account) {
+        if (!$this->account) {
             $this->load('account');
         }
 
@@ -535,7 +538,7 @@ class Client extends EntityModel
             return $this->currency->code;
         }
 
-        if (! $this->account) {
+        if (!$this->account) {
             $this->load('account');
         }
 
@@ -548,7 +551,7 @@ class Client extends EntityModel
             return $country->iso_3166_2;
         }
 
-        if (! $this->account) {
+        if (!$this->account) {
             $this->load('account');
         }
 
@@ -577,15 +580,17 @@ class Client extends EntityModel
      */
     public function hasAutoBillConfigurableInvoices()
     {
-        return $this->invoices()->whereIsPublic(true)->whereIn('auto_bill', [AUTO_BILL_OPT_IN, AUTO_BILL_OPT_OUT])->count() > 0;
+        return $this->invoices()->whereIsPublic(true)->whereIn('auto_bill',
+                [AUTO_BILL_OPT_IN, AUTO_BILL_OPT_OUT])->count() > 0;
     }
 
     /**
- * @return bool
- */
+     * @return bool
+     */
     public function hasRecurringInvoices()
     {
-        return $this->invoices()->whereIsPublic(true)->whereIsRecurring(true)->where('invoice_type_id', INVOICE_TYPE_STANDARD)->count() > 0;
+        return $this->invoices()->whereIsPublic(true)->whereIsRecurring(true)->where('invoice_type_id',
+                INVOICE_TYPE_STANDARD)->count() > 0;
     }
 
     /**
@@ -593,7 +598,8 @@ class Client extends EntityModel
      */
     public function hasRecurringQuotes()
     {
-        return $this->invoices()->whereIsPublic(true)->whereIsRecurring(true)->where('invoice_type_id', INVOICE_TYPE_QUOTE)->count() > 0;
+        return $this->invoices()->whereIsPublic(true)->whereIsRecurring(true)->where('invoice_type_id',
+                INVOICE_TYPE_QUOTE)->count() > 0;
     }
 
     public function defaultDaysDue()

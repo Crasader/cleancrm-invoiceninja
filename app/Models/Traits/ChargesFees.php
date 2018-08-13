@@ -18,7 +18,7 @@ trait ChargesFees
         $fee = 0;
         $fee_cap = $settings->fee_cap;
 
-        if (! $account->gateway_fee_enabled) {
+        if (!$account->gateway_fee_enabled) {
             return false;
         }
 
@@ -44,7 +44,7 @@ trait ChargesFees
             }
         }
 
-        if($fee_cap != 0) {
+        if ($fee_cap != 0) {
             $fee = min($fee, $fee_cap);
         }
 
@@ -55,7 +55,7 @@ trait ChargesFees
     {
         $account = $this->account;
 
-        if (! $account->gateway_fee_enabled) {
+        if (!$account->gateway_fee_enabled) {
             return 0;
         }
 
@@ -65,7 +65,7 @@ trait ChargesFees
 
     public function getGatewayFeeItem()
     {
-        if (! $this->relationLoaded('invoice_items')) {
+        if (!$this->relationLoaded('invoice_items')) {
             $this->load('invoice_items');
         }
 

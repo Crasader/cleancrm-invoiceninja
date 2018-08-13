@@ -34,8 +34,13 @@ class QuoteController extends BaseController
     protected $invoiceService;
     protected $entityType = ENTITY_INVOICE;
 
-    public function __construct(Mailer $mailer, InvoiceRepository $invoiceRepo, ClientRepository $clientRepo, InvoiceService $invoiceService, RecurringInvoiceService $recurringInvoiceService)
-    {
+    public function __construct(
+        Mailer $mailer,
+        InvoiceRepository $invoiceRepo,
+        ClientRepository $clientRepo,
+        InvoiceService $invoiceService,
+        RecurringInvoiceService $recurringInvoiceService
+    ) {
         // parent::__construct();
 
         $this->mailer = $mailer;
@@ -51,9 +56,9 @@ class QuoteController extends BaseController
         $datatable->entityType = ENTITY_QUOTE;
 
         $data = [
-          'title' => trans('texts.quotes'),
-          'entityType' => ENTITY_QUOTE,
-          'datatable' => $datatable,
+            'title' => trans('texts.quotes'),
+            'entityType' => ENTITY_QUOTE,
+            'datatable' => $datatable,
         ];
 
         return response()->view('list_wrapper', $data);
@@ -72,12 +77,13 @@ class QuoteController extends BaseController
         $accountId = Auth::user()->account_id;
         $search = Input::get('sSearch');
 
-        return $this->recurringInvoiceService->getDatatable($accountId, $clientPublicId, ENTITY_RECURRING_QUOTE, $search);
+        return $this->recurringInvoiceService->getDatatable($accountId, $clientPublicId, ENTITY_RECURRING_QUOTE,
+            $search);
     }
 
     public function create(QuoteRequest $request, $clientPublicId = 0)
     {
-        if (! Utils::hasFeature(FEATURE_QUOTES)) {
+        if (!Utils::hasFeature(FEATURE_QUOTES)) {
             return Redirect::to('/invoices/create');
         }
 
@@ -107,26 +113,25 @@ class QuoteController extends BaseController
         $account = Auth::user()->account;
 
         return [
-          'entityType' => ENTITY_QUOTE,
-          'account' => Auth::user()->account->load('country'),
-          'products' => Product::scope()->orderBy('product_key')->get(),
-          'taxRateOptions' => $account->present()->taxRateOptions,
-          'clients' => Client::scope()->with('contacts', 'country')->orderBy('name')->get(),
-          'taxRates' => TaxRate::scope()->orderBy('name')->get(),
-          'sizes' => Cache::get('sizes'),
-          'paymentTerms' => Cache::get('paymentTerms'),
-          'invoiceDesigns' => InvoiceDesign::getDesigns(),
-          'invoiceFonts' => Cache::get('fonts'),
-          'invoiceLabels' => Auth::user()->account->getInvoiceLabels(),
-          'isRecurring' => false,
-          'expenses' => collect(),
+            'entityType' => ENTITY_QUOTE,
+            'account' => Auth::user()->account->load('country'),
+            'products' => Product::scope()->orderBy('product_key')->get(),
+            'taxRateOptions' => $account->present()->taxRateOptions,
+            'clients' => Client::scope()->with('contacts', 'country')->orderBy('name')->get(),
+            'taxRates' => TaxRate::scope()->orderBy('name')->get(),
+            'sizes' => Cache::get('sizes'),
+            'paymentTerms' => Cache::get('paymentTerms'),
+            'invoiceDesigns' => InvoiceDesign::getDesigns(),
+            'invoiceFonts' => Cache::get('fonts'),
+            'invoiceLabels' => Auth::user()->account->getInvoiceLabels(),
+            'isRecurring' => false,
+            'expenses' => collect(),
         ];
     }
 
     public function bulk()
     {
-        $action = Input::get('bulk_action') ?: Input::get('action');
-        ;
+        $action = Input::get('bulk_action') ?: Input::get('action');;
         $ids = Input::get('bulk_public_id') ?: (Input::get('public_id') ?: Input::get('ids'));
 
         if ($action == 'convert') {
@@ -135,7 +140,7 @@ class QuoteController extends BaseController
 
             Session::flash('message', trans('texts.converted_to_invoice'));
 
-            return Redirect::to('invoices/'.$clone->public_id);
+            return Redirect::to('invoices/' . $clone->public_id);
         }
 
         $count = $this->invoiceService->bulk($ids, $action);
@@ -157,17 +162,18 @@ class QuoteController extends BaseController
 
     public function approve($invitationKey)
     {
-        $invitation = Invitation::with('invoice.invoice_items', 'invoice.invitations')->where('invitation_key', '=', $invitationKey)->firstOrFail();
+        $invitation = Invitation::with('invoice.invoice_items', 'invoice.invitations')->where('invitation_key', '=',
+            $invitationKey)->firstOrFail();
         $invoice = $invitation->invoice;
         $account = $invoice->account;
 
-        if ($account->requiresAuthorization($invoice) && ! session('authorized:' . $invitation->invitation_key)) {
+        if ($account->requiresAuthorization($invoice) && !session('authorized:' . $invitation->invitation_key)) {
             return redirect()->to('view/' . $invitation->invitation_key);
         }
 
         if ($invoice->due_date) {
             $carbonDueDate = \Carbon::parse($invoice->due_date);
-            if (! $account->allow_approve_expired_quote && ! $carbonDueDate->isToday() && ! $carbonDueDate->isFuture()) {
+            if (!$account->allow_approve_expired_quote && !$carbonDueDate->isToday() && !$carbonDueDate->isFuture()) {
                 return redirect("view/{$invitationKey}")->withError(trans('texts.quote_has_expired'));
             }
         }

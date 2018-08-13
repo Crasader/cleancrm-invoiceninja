@@ -28,11 +28,12 @@ class PurgeClientData extends Job
         $client = $this->client;
         $contact = $client->getPrimaryContact();
 
-        if (! $user->is_admin) {
+        if (!$user->is_admin) {
             return;
         }
 
-        $message = sprintf('%s %s (%s) purged client: %s %s', date('Y-m-d h:i:s'), $user->email, request()->getClientIp(), $client->name, $contact->email);
+        $message = sprintf('%s %s (%s) purged client: %s %s', date('Y-m-d h:i:s'), $user->email,
+            request()->getClientIp(), $client->name, $contact->email);
 
         if (config('app.log') == 'single') {
             @file_put_contents(storage_path('logs/purged-clients.log'), $message, FILE_APPEND);

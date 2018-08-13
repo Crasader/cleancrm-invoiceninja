@@ -27,20 +27,12 @@ class RecurringExpenseService extends BaseService
      * CreditService constructor.
      *
      * @param RecurringExpenseRepository $creditRepo
-     * @param DatatableService  $datatableService
+     * @param DatatableService $datatableService
      */
     public function __construct(RecurringExpenseRepository $recurringExpenseRepo, DatatableService $datatableService)
     {
         $this->recurringExpenseRepo = $recurringExpenseRepo;
         $this->datatableService = $datatableService;
-    }
-
-    /**
-     * @return CreditRepository
-     */
-    protected function getRepo()
-    {
-        return $this->recurringExpenseRepo;
     }
 
     /**
@@ -73,10 +65,18 @@ class RecurringExpenseService extends BaseService
     {
         $query = $this->recurringExpenseRepo->find($search);
 
-        if (! Utils::hasPermission('view_expense')) {
+        if (!Utils::hasPermission('view_expense')) {
             $query->where('recurring_expenses.user_id', '=', Auth::user()->id);
         }
 
         return $this->datatableService->createDatatable(new RecurringExpenseDatatable(), $query);
+    }
+
+    /**
+     * @return CreditRepository
+     */
+    protected function getRepo()
+    {
+        return $this->recurringExpenseRepo;
     }
 }

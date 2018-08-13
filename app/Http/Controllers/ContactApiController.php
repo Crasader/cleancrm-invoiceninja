@@ -46,8 +46,8 @@ class ContactApiController extends BaseAPIController
     public function index()
     {
         $contacts = Contact::scope()
-                    ->withTrashed()
-                    ->orderBy('created_at', 'desc');
+            ->withTrashed()
+            ->orderBy('created_at', 'desc');
 
         return $this->listResponse($contacts);
     }

@@ -88,6 +88,58 @@ class Expense extends EntityModel
         ];
     }
 
+    public static function getStatuses($entityType = false)
+    {
+        $statuses = [];
+        $statuses[EXPENSE_STATUS_LOGGED] = trans('texts.logged');
+        $statuses[EXPENSE_STATUS_PENDING] = trans('texts.pending');
+        $statuses[EXPENSE_STATUS_INVOICED] = trans('texts.invoiced');
+        $statuses[EXPENSE_STATUS_BILLED] = trans('texts.billed');
+        $statuses[EXPENSE_STATUS_PAID] = trans('texts.paid');
+        $statuses[EXPENSE_STATUS_UNPAID] = trans('texts.unpaid');
+
+
+        return $statuses;
+    }
+
+    public static function calcStatusLabel($shouldBeInvoiced, $invoiceId, $balance, $paymentDate)
+    {
+        if ($invoiceId) {
+            if (floatval($balance) > 0) {
+                $label = 'invoiced';
+            } else {
+                $label = 'billed';
+            }
+        } elseif ($shouldBeInvoiced) {
+            $label = 'pending';
+        } else {
+            $label = 'logged';
+        }
+
+        $label = trans("texts.{$label}");
+
+        if ($paymentDate) {
+            $label = trans('texts.paid') . ' | ' . $label;
+        }
+
+        return $label;
+    }
+
+    public static function calcStatusClass($shouldBeInvoiced, $invoiceId, $balance)
+    {
+        if ($invoiceId) {
+            if (floatval($balance) > 0) {
+                return 'default';
+            } else {
+                return 'success';
+            }
+        } elseif ($shouldBeInvoiced) {
+            return 'warning';
+        } else {
+            return 'primary';
+        }
+    }
+
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
@@ -159,7 +211,6 @@ class Expense extends EntityModel
     {
         return $this->belongsTo('App\Models\RecurringExpense');
     }
-
 
     /**
      * @return mixed
@@ -270,58 +321,6 @@ class Expense extends EntityModel
     public function taxAmount()
     {
         return Utils::calculateTaxes($this->amount, $this->tax_rate1, $this->tax_rate2);
-    }
-
-    public static function getStatuses($entityType = false)
-    {
-        $statuses = [];
-        $statuses[EXPENSE_STATUS_LOGGED] = trans('texts.logged');
-        $statuses[EXPENSE_STATUS_PENDING] = trans('texts.pending');
-        $statuses[EXPENSE_STATUS_INVOICED] = trans('texts.invoiced');
-        $statuses[EXPENSE_STATUS_BILLED] = trans('texts.billed');
-        $statuses[EXPENSE_STATUS_PAID] = trans('texts.paid');
-        $statuses[EXPENSE_STATUS_UNPAID] = trans('texts.unpaid');
-
-
-        return $statuses;
-    }
-
-    public static function calcStatusLabel($shouldBeInvoiced, $invoiceId, $balance, $paymentDate)
-    {
-        if ($invoiceId) {
-            if (floatval($balance) > 0) {
-                $label = 'invoiced';
-            } else {
-                $label = 'billed';
-            }
-        } elseif ($shouldBeInvoiced) {
-            $label = 'pending';
-        } else {
-            $label = 'logged';
-        }
-
-        $label = trans("texts.{$label}");
-
-        if ($paymentDate) {
-            $label = trans('texts.paid') . ' | ' . $label;
-        }
-
-        return $label;
-    }
-
-    public static function calcStatusClass($shouldBeInvoiced, $invoiceId, $balance)
-    {
-        if ($invoiceId) {
-            if (floatval($balance) > 0) {
-                return 'default';
-            } else {
-                return 'success';
-            }
-        } elseif ($shouldBeInvoiced) {
-            return 'warning';
-        } else {
-            return 'primary';
-        }
     }
 
     public function statusClass()

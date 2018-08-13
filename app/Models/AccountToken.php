@@ -41,15 +41,13 @@ class AccountToken extends EntityModel
     }
 }
 
-AccountToken::creating(function ($token)
-{
+AccountToken::creating(function ($token) {
     LookupAccountToken::createNew($token->account->account_key, [
         'token' => $token->token,
     ]);
 });
 
-AccountToken::deleted(function ($token)
-{
+AccountToken::deleted(function ($token) {
     if ($token->forceDeleting) {
         LookupAccountToken::deleteWhere([
             'token' => $token->token

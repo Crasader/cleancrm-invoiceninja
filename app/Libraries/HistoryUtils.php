@@ -54,7 +54,7 @@ class HistoryUtils
                 $entity = $activity->client;
             } elseif ($activity->activity_type_id == ACTIVITY_TYPE_CREATE_TASK || $activity->activity_type_id == ACTIVITY_TYPE_UPDATE_TASK) {
                 $entity = $activity->task;
-                if (! $entity) {
+                if (!$entity) {
                     continue;
                 }
                 $entity->setRelation('client', $activity->client);
@@ -66,13 +66,13 @@ class HistoryUtils
                 }
             } elseif ($activity->activity_type_id == ACTIVITY_TYPE_CREATE_EXPENSE || $activity->activity_type_id == ACTIVITY_TYPE_UPDATE_EXPENSE) {
                 $entity = $activity->expense;
-                if (! $entity) {
+                if (!$entity) {
                     continue;
                 }
                 $entity->setRelation('client', $activity->client);
             } else {
                 $entity = $activity->invoice;
-                if (! $entity) {
+                if (!$entity) {
                     continue;
                 }
                 $entity->setRelation('client', $activity->client);
@@ -88,7 +88,7 @@ class HistoryUtils
         $accountHistory = isset($history[$entity->account_id]) ? $history[$entity->account_id] : [];
         $remove = [];
 
-        for ($i=0; $i<count($accountHistory); $i++) {
+        for ($i = 0; $i < count($accountHistory); $i++) {
             $item = $accountHistory[$i];
             if ($entity->equalTo($item)) {
                 $remove[] = $i;
@@ -97,7 +97,7 @@ class HistoryUtils
             }
         }
 
-        for ($i=count($remove) - 1; $i>=0; $i--) {
+        for ($i = count($remove) - 1; $i >= 0; $i--) {
             array_splice($history[$entity->account_id], $remove[$i], 1);
         }
 
@@ -118,7 +118,7 @@ class HistoryUtils
             //ENTITY_RECURRING_EXPENSE,
         ];
 
-        if (! in_array($entityType, $trackedTypes)) {
+        if (!in_array($entityType, $trackedTypes)) {
             return;
         }
 
@@ -159,33 +159,6 @@ class HistoryUtils
         Session::put(RECENTLY_VIEWED, $history);
     }
 
-    private static function convertToObject($entity)
-    {
-        $object = new stdClass();
-        $object->id = $entity->id;
-        $object->accountId = $entity->account_id;
-        $object->url = $entity->present()->url;
-        $object->entityType = $entity->subEntityType();
-        $object->name = $entity->present()->titledName;
-        $object->timestamp = time();
-
-        if ($entity->isEntityType(ENTITY_CLIENT)) {
-            $object->client_id = $entity->public_id;
-            $object->client_name = $entity->getDisplayName();
-        } elseif (method_exists($entity, 'client') && $entity->client) {
-            $object->client_id = $entity->client->public_id;
-            $object->client_name = $entity->client->getDisplayName();
-        } elseif (method_exists($entity, 'invoice') && $entity->invoice) {
-            $object->client_id = $entity->invoice->client->public_id;
-            $object->client_name = $entity->invoice->client->getDisplayName();
-        } else {
-            $object->client_id = 0;
-            $object->client_name = 0;
-        }
-
-        return $object;
-    }
-
     public static function renderHtml($accountId)
     {
         $lastClientId = false;
@@ -219,7 +192,8 @@ class HistoryUtils
                 }
 
                 $padding = $str ? 16 : 0;
-                $str .= sprintf('<li style="margin-top: %spx">%s<a href="%s"><div>%s %s</div></a></li>', $padding, $button, $link, $icon, $name);
+                $str .= sprintf('<li style="margin-top: %spx">%s<a href="%s"><div>%s %s</div></a></li>', $padding,
+                    $button, $link, $icon, $name);
                 $lastClientId = $item->client_id;
             }
 
@@ -228,9 +202,37 @@ class HistoryUtils
             }
 
             $icon = '<i class="fa fa-' . EntityModel::getIcon($item->entityType . 's') . '" style="width:24px"></i>';
-            $str .= sprintf('<li style="text-align:right; padding-right:18px;"><a href="%s">%s %s</a></li>', $item->url, e($item->name), $icon);
+            $str .= sprintf('<li style="text-align:right; padding-right:18px;"><a href="%s">%s %s</a></li>', $item->url,
+                e($item->name), $icon);
         }
 
         return $str;
+    }
+
+    private static function convertToObject($entity)
+    {
+        $object = new stdClass();
+        $object->id = $entity->id;
+        $object->accountId = $entity->account_id;
+        $object->url = $entity->present()->url;
+        $object->entityType = $entity->subEntityType();
+        $object->name = $entity->present()->titledName;
+        $object->timestamp = time();
+
+        if ($entity->isEntityType(ENTITY_CLIENT)) {
+            $object->client_id = $entity->public_id;
+            $object->client_name = $entity->getDisplayName();
+        } elseif (method_exists($entity, 'client') && $entity->client) {
+            $object->client_id = $entity->client->public_id;
+            $object->client_name = $entity->client->getDisplayName();
+        } elseif (method_exists($entity, 'invoice') && $entity->invoice) {
+            $object->client_id = $entity->invoice->client->public_id;
+            $object->client_name = $entity->invoice->client->getDisplayName();
+        } else {
+            $object->client_id = 0;
+            $object->client_name = 0;
+        }
+
+        return $object;
     }
 }

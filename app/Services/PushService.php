@@ -31,7 +31,7 @@ class PushService
     public function sendNotification(Invoice $invoice, $type)
     {
         //check user has registered for push notifications
-        if (! $this->checkDeviceExists($invoice->account)) {
+        if (!$this->checkDeviceExists($invoice->account)) {
             return;
         }
 
@@ -75,7 +75,7 @@ class PushService
     {
         $devices = json_decode($account->devices, true);
 
-        if (count((array) $devices) >= 1) {
+        if (count((array)$devices) >= 1) {
             return true;
         } else {
             return false;
@@ -121,9 +121,11 @@ class PushService
     private function entitySentMessage(Invoice $invoice)
     {
         if ($invoice->isType(INVOICE_TYPE_QUOTE)) {
-            return trans('texts.notification_quote_sent_subject', ['invoice' => $invoice->invoice_number, 'client' => $invoice->client->name]);
+            return trans('texts.notification_quote_sent_subject',
+                ['invoice' => $invoice->invoice_number, 'client' => $invoice->client->name]);
         } else {
-            return trans('texts.notification_invoice_sent_subject', ['invoice' => $invoice->invoice_number, 'client' => $invoice->client->name]);
+            return trans('texts.notification_invoice_sent_subject',
+                ['invoice' => $invoice->invoice_number, 'client' => $invoice->client->name]);
         }
     }
 
@@ -134,7 +136,8 @@ class PushService
      */
     private function invoicePaidMessage(Invoice $invoice)
     {
-        return trans('texts.notification_invoice_paid_subject', ['invoice' => $invoice->invoice_number, 'client' => $invoice->client->name]);
+        return trans('texts.notification_invoice_paid_subject',
+            ['invoice' => $invoice->invoice_number, 'client' => $invoice->client->name]);
     }
 
     /**
@@ -144,7 +147,8 @@ class PushService
      */
     private function quoteApprovedMessage(Invoice $invoice)
     {
-        return trans('texts.notification_quote_approved_subject', ['invoice' => $invoice->invoice_number, 'client' => $invoice->client->name]);
+        return trans('texts.notification_quote_approved_subject',
+            ['invoice' => $invoice->invoice_number, 'client' => $invoice->client->name]);
     }
 
     /**
@@ -155,9 +159,11 @@ class PushService
     private function entityViewedMessage(Invoice $invoice)
     {
         if ($invoice->isType(INVOICE_TYPE_QUOTE)) {
-            return trans('texts.notification_quote_viewed_subject', ['invoice' => $invoice->invoice_number, 'client' => $invoice->client->name]);
+            return trans('texts.notification_quote_viewed_subject',
+                ['invoice' => $invoice->invoice_number, 'client' => $invoice->client->name]);
         } else {
-            return trans('texts.notification_invoice_viewed_subject', ['invoice' => $invoice->invoice_number, 'client' => $invoice->client->name]);
+            return trans('texts.notification_invoice_viewed_subject',
+                ['invoice' => $invoice->invoice_number, 'client' => $invoice->client->name]);
         }
     }
 }

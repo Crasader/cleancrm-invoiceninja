@@ -45,7 +45,7 @@ class DashboardController extends BaseController
 
         // calculate paid to date totals
         $paidToDateTotal = 0;
-        foreach($paidToDate as $item) {
+        foreach ($paidToDate as $item) {
             $paidToDateTotal += ($item->value * $item->exchange_rate);
         }
 
@@ -55,7 +55,7 @@ class DashboardController extends BaseController
         foreach ($averageInvoice as $item) {
             $invoiceTotalCount += $item->invoice_count;
 
-            if (! $item->exchange_rate) {
+            if (!$item->exchange_rate) {
                 $invoiceTotal += $item->invoice_avg * $item->invoice_count;
                 continue;
             }
@@ -73,7 +73,7 @@ class DashboardController extends BaseController
                 continue;
             }
 
-            if (! isset($currencies[$item->currency_id])) {
+            if (!isset($currencies[$item->currency_id])) {
                 $currencies[$item->currency_id] = Currency::where('id', $item->currency_id)->firstOrFail();
             }
 
@@ -94,7 +94,7 @@ class DashboardController extends BaseController
 
         $showBlueVinePromo = false;
         if ($user->is_admin && env('BLUEVINE_PARTNER_UNIQUE_ID')) {
-            $showBlueVinePromo = ! $account->company->bluevine_status
+            $showBlueVinePromo = !$account->company->bluevine_status
                 && $account->created_at <= date('Y-m-d', strtotime('-1 month'));
             if (request()->bluevine) {
                 $showBlueVinePromo = true;
@@ -165,6 +165,15 @@ class DashboardController extends BaseController
         return View::make('dashboard', $data);
     }
 
+    public function chartData($groupBy, $startDate, $endDate, $currencyCode, $includeExpenses)
+    {
+        $includeExpenses = filter_var($includeExpenses, FILTER_VALIDATE_BOOLEAN);
+        $data = $this->dashboardRepo->chartData(Auth::user()->account, $groupBy, $startDate, $endDate, $currencyCode,
+            $includeExpenses);
+
+        return json_encode($data);
+    }
+
     private function getCurrencyCodes()
     {
         $account = Auth::user()->account;
@@ -179,7 +188,7 @@ class DashboardController extends BaseController
 
         array_map(function ($item) use (&$currencyIds) {
             $currencyId = intval($item['currency_id']);
-            if ($currencyId && ! in_array($currencyId, $currencyIds)) {
+            if ($currencyId && !in_array($currencyId, $currencyIds)) {
                 $currencyIds[] = $currencyId;
             }
         }, $data);
@@ -193,7 +202,7 @@ class DashboardController extends BaseController
 
         array_map(function ($item) use (&$currencyIds) {
             $currencyId = intval($item['expense_currency_id']);
-            if ($currencyId && ! in_array($currencyId, $currencyIds)) {
+            if ($currencyId && !in_array($currencyId, $currencyIds)) {
                 $currencyIds[] = $currencyId;
             }
         }, $data);
@@ -204,13 +213,5 @@ class DashboardController extends BaseController
         }
 
         return $currencies;
-    }
-
-    public function chartData($groupBy, $startDate, $endDate, $currencyCode, $includeExpenses)
-    {
-        $includeExpenses = filter_var($includeExpenses, FILTER_VALIDATE_BOOLEAN);
-        $data = $this->dashboardRepo->chartData(Auth::user()->account, $groupBy, $startDate, $endDate, $currencyCode, $includeExpenses);
-
-        return json_encode($data);
     }
 }

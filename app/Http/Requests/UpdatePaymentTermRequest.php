@@ -25,7 +25,7 @@ class UpdatePaymentTermRequest extends PaymentTermRequest
 
     public function rules()
     {
-        if (! $this->entity()) {
+        if (!$this->entity()) {
             return [];
         }
 

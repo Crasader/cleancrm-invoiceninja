@@ -46,8 +46,8 @@ class UserApiController extends BaseAPIController
     public function index()
     {
         $users = User::whereAccountId(Auth::user()->account_id)
-                        ->withTrashed()
-                        ->orderBy('created_at', 'desc');
+            ->withTrashed()
+            ->orderBy('created_at', 'desc');
 
         return $this->listResponse($users);
     }

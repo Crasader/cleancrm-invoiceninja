@@ -34,7 +34,7 @@ class GenerateProjectChartData extends Job
         foreach ($project->tasks as $task) {
             $parts = json_decode($task->time_log) ?: [];
 
-            if (! count($parts)) {
+            if (!count($parts)) {
                 continue;
             }
 
@@ -48,7 +48,7 @@ class GenerateProjectChartData extends Job
                 $date->setTimestamp($part[0]);
                 $sqlDate = $date->format('Y-m-d');
 
-                if (! isset($taskMap[$sqlDate])) {
+                if (!isset($taskMap[$sqlDate])) {
                     $taskMap[$sqlDate] = 0;
                 }
 

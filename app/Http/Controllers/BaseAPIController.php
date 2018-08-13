@@ -74,7 +74,7 @@ class BaseAPIController extends Controller
         $entity = $request->entity();
         $action = $request->action;
 
-        if (! in_array($action, ['archive', 'delete', 'restore', 'mark_sent', 'markSent', 'emailInvoice', 'markPaid'])) {
+        if (!in_array($action, ['archive', 'delete', 'restore', 'mark_sent', 'markSent', 'emailInvoice', 'markPaid'])) {
             return $this->errorResponse("Action [$action] is not supported");
         }
 
@@ -104,19 +104,19 @@ class BaseAPIController extends Controller
         }
 
         if (Input::get('updated_at') > 0) {
-                $updatedAt = intval(Input::get('updated_at'));
-                $query->where('updated_at', '>=', date('Y-m-d H:i:s', $updatedAt));
+            $updatedAt = intval(Input::get('updated_at'));
+            $query->where('updated_at', '>=', date('Y-m-d H:i:s', $updatedAt));
         }
 
         if (Input::get('client_id') > 0) {
-                $clientPublicId = Input::get('client_id');
-                $filter = function ($query) use ($clientPublicId) {
+            $clientPublicId = Input::get('client_id');
+            $filter = function ($query) use ($clientPublicId) {
                 $query->where('public_id', '=', $clientPublicId);
-             };
-             $query->whereHas('client', $filter);
+            };
+            $query->whereHas('client', $filter);
         }
 
-        if (! Utils::hasPermission('view_'.$this->entityType)) {
+        if (!Utils::hasPermission('view_' . $this->entityType)) {
             if ($this->entityType == ENTITY_USER) {
                 $query->where('id', '=', Auth::user()->id);
             } else {
@@ -131,7 +131,7 @@ class BaseAPIController extends Controller
 
     protected function itemResponse($item)
     {
-        if (! $item) {
+        if (!$item) {
             return $this->errorResponse('Record not found', 404);
         }
 

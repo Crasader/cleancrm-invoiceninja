@@ -55,8 +55,8 @@ class ProductApiController extends BaseAPIController
     public function index()
     {
         $products = Product::scope()
-                        ->withTrashed()
-                        ->orderBy('created_at', 'desc');
+            ->withTrashed()
+            ->orderBy('created_at', 'desc');
 
         return $this->listResponse($products);
     }
@@ -184,12 +184,12 @@ class ProductApiController extends BaseAPIController
      *   )
      * )
      */
-     public function destroy(UpdateProductRequest $request)
-     {
-         $product = $request->entity();
+    public function destroy(UpdateProductRequest $request)
+    {
+        $product = $request->entity();
 
-         $this->productRepo->delete($product);
+        $this->productRepo->delete($product);
 
-         return $this->itemResponse($product);
-     }
+        return $this->itemResponse($product);
+    }
 }

@@ -22,15 +22,6 @@ class InvoiceItem extends EntityModel
      * @var array
      */
     protected $dates = ['deleted_at'];
-
-    /**
-     * @return mixed
-     */
-    public function getEntityType()
-    {
-        return ENTITY_INVOICE_ITEM;
-    }
-
     /**
      * @var array
      */
@@ -42,6 +33,14 @@ class InvoiceItem extends EntityModel
         'invoice_item_type_id',
         'discount',
     ];
+
+    /**
+     * @return mixed
+     */
+    public function getEntityType()
+    {
+        return ENTITY_INVOICE_ITEM;
+    }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo

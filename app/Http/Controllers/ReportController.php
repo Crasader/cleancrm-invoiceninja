@@ -26,12 +26,12 @@ class ReportController extends BaseController
     public function d3()
     {
         $message = '';
-        $fileName = storage_path().'/dataviz_sample.txt';
+        $fileName = storage_path() . '/dataviz_sample.txt';
 
         if (Auth::user()->account->hasFeature(FEATURE_REPORTS)) {
             $account = Account::where('id', '=', Auth::user()->account->id)
-                            ->with(['clients.invoices.invoice_items', 'clients.contacts', 'clients.currency'])
-                            ->first();
+                ->with(['clients.invoices.invoice_items', 'clients.contacts', 'clients.currency'])
+                ->first();
             $account = $account->hideFieldsForViz();
             $clients = $account->clients;
         } elseif (file_exists($fileName)) {
@@ -54,7 +54,7 @@ class ReportController extends BaseController
      */
     public function showReports()
     {
-        if (! Auth::user()->hasPermission('view_reports')) {
+        if (!Auth::user()->hasPermission('view_reports')) {
             return redirect('/');
         }
 
@@ -116,7 +116,8 @@ class ReportController extends BaseController
             $params = array_merge($params, $report->exportParams);
             switch ($action) {
                 case 'export':
-                    return dispatch(new ExportReportResults(auth()->user(), $format, $reportType, $params))->export($format);
+                    return dispatch(new ExportReportResults(auth()->user(), $format, $reportType,
+                        $params))->export($format);
                     break;
                 case 'schedule':
                     self::schedule($params, $config);
@@ -139,6 +140,22 @@ class ReportController extends BaseController
         return View::make('reports.report_builder', $params);
     }
 
+    public function showEmailReport()
+    {
+        $data = [
+            'account' => auth()->user()->account,
+        ];
+
+        return view('reports.emails', $data);
+    }
+
+    public function loadEmailReport($startDate, $endDate)
+    {
+        $data = dispatch(new LoadPostmarkStats($startDate, $endDate));
+
+        return response()->json($data);
+    }
+
     private function schedule($params, $options)
     {
         $validator = Validator::make(request()->all(), [
@@ -151,8 +168,10 @@ class ReportController extends BaseController
         } else {
             $options['report_type'] = $params['reportType'];
             $options['range'] = request('range');
-            $options['start_date_offset'] = $options['range'] ? '' : Carbon::parse($params['startDate'])->diffInDays(null, false); // null,false to get the relative/non-absolute diff
-            $options['end_date_offset'] = $options['range'] ? '' : Carbon::parse($params['endDate'])->diffInDays(null, false);
+            $options['start_date_offset'] = $options['range'] ? '' : Carbon::parse($params['startDate'])->diffInDays(null,
+                false); // null,false to get the relative/non-absolute diff
+            $options['end_date_offset'] = $options['range'] ? '' : Carbon::parse($params['endDate'])->diffInDays(null,
+                false);
 
             unset($options['start_date']);
             unset($options['end_date']);
@@ -178,21 +197,5 @@ class ReportController extends BaseController
             ->delete();
 
         session()->flash('message', trans('texts.deleted_scheduled_report'));
-    }
-
-    public function showEmailReport()
-    {
-        $data = [
-            'account' => auth()->user()->account,
-        ];
-
-        return view('reports.emails', $data);
-    }
-
-    public function loadEmailReport($startDate, $endDate)
-    {
-        $data = dispatch(new LoadPostmarkStats($startDate, $endDate));
-
-        return response()->json($data);
     }
 }

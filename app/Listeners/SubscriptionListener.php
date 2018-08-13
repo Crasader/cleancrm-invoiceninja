@@ -40,6 +40,37 @@ use Utils;
  */
 class SubscriptionListener
 {
+    private static function notifySubscription($subscription, $data)
+    {
+        $curl = curl_init();
+        $jsonEncodedData = json_encode($data);
+        $url = $subscription->target_url;
+
+        if (!Utils::isNinja() && $secret = env('SUBSCRIPTION_SECRET')) {
+            $url .= '?secret=' . $secret;
+        }
+
+        $opts = [
+            CURLOPT_URL => $url,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_CUSTOMREQUEST => 'POST',
+            CURLOPT_POST => 1,
+            CURLOPT_POSTFIELDS => $jsonEncodedData,
+            CURLOPT_HTTPHEADER => ['Content-Type: application/json', 'Content-Length: ' . strlen($jsonEncodedData)],
+        ];
+
+        curl_setopt_array($curl, $opts);
+
+        $result = curl_exec($curl);
+        $status = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+
+        curl_close($curl);
+
+        if ($status == 410) {
+            $subscription->delete();
+        }
+    }
+
     /**
      * @param ClientWasCreated $event
      */
@@ -67,7 +98,6 @@ class SubscriptionListener
         $this->checkSubscriptions(EVENT_DELETE_CLIENT, $event->client, $transformer);
     }
 
-
     /**
      * @param PaymentWasCreated $event
      */
@@ -85,7 +115,6 @@ class SubscriptionListener
         $transformer = new PaymentTransformer($event->payment->account);
         $this->checkSubscriptions(EVENT_DELETE_PAYMENT, $event->payment, $transformer, [ENTITY_CLIENT, ENTITY_INVOICE]);
     }
-
 
     /**
      * @param InvoiceWasCreated $event
@@ -113,7 +142,6 @@ class SubscriptionListener
         $transformer = new InvoiceTransformer($event->invoice->account);
         $this->checkSubscriptions(EVENT_DELETE_INVOICE, $event->invoice, $transformer, ENTITY_CLIENT);
     }
-
 
     /**
      * @param QuoteWasCreated $event
@@ -151,7 +179,6 @@ class SubscriptionListener
         $this->checkSubscriptions(EVENT_DELETE_QUOTE, $event->quote, $transformer, ENTITY_CLIENT);
     }
 
-
     /**
      * @param VendorWasCreated $event
      */
@@ -178,7 +205,6 @@ class SubscriptionListener
         $transformer = new VendorTransformer($event->vendor->account);
         $this->checkSubscriptions(EVENT_DELETE_VENDOR, $event->vendor, $transformer);
     }
-
 
     /**
      * @param ExpenseWasCreated $event
@@ -207,7 +233,6 @@ class SubscriptionListener
         $this->checkSubscriptions(EVENT_DELETE_EXPENSE, $event->expense, $transformer);
     }
 
-
     /**
      * @param TaskWasCreated $event
      */
@@ -235,7 +260,6 @@ class SubscriptionListener
         $this->checkSubscriptions(EVENT_DELETE_TASK, $event->task, $transformer);
     }
 
-
     /**
      * @param $eventId
      * @param $entity
@@ -244,13 +268,13 @@ class SubscriptionListener
      */
     private function checkSubscriptions($eventId, $entity, $transformer, $include = '')
     {
-        if (! EntityModel::$notifySubscriptions) {
+        if (!EntityModel::$notifySubscriptions) {
             return;
         }
 
         $subscriptions = $entity->account->getSubscriptions($eventId);
 
-        if (! $subscriptions->count()) {
+        if (!$subscriptions->count()) {
             return;
         }
 
@@ -277,37 +301,6 @@ class SubscriptionListener
                     break;
             }
             self::notifySubscription($subscription, $data);
-        }
-    }
-
-    private static function notifySubscription($subscription, $data)
-    {
-        $curl = curl_init();
-        $jsonEncodedData = json_encode($data);
-        $url = $subscription->target_url;
-
-        if (! Utils::isNinja() && $secret = env('SUBSCRIPTION_SECRET')) {
-            $url .= '?secret=' . $secret;
-        }
-
-        $opts = [
-            CURLOPT_URL => $url,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_CUSTOMREQUEST => 'POST',
-            CURLOPT_POST => 1,
-            CURLOPT_POSTFIELDS => $jsonEncodedData,
-            CURLOPT_HTTPHEADER => ['Content-Type: application/json', 'Content-Length: '.strlen($jsonEncodedData)],
-        ];
-
-        curl_setopt_array($curl, $opts);
-
-        $result = curl_exec($curl);
-        $status = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-
-        curl_close($curl);
-
-        if ($status == 410) {
-            $subscription->delete();
         }
     }
 

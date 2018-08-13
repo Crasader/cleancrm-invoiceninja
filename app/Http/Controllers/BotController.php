@@ -31,7 +31,7 @@ class BotController extends Controller
         $input = Input::all();
         $botUserId = $input['from']['id'];
 
-        if (! $token = $this->authenticate($input)) {
+        if (!$token = $this->authenticate($input)) {
             return SkypeResponse::message(trans('texts.not_authorized'));
         }
 
@@ -59,7 +59,7 @@ class BotController extends Controller
                     } else {
                         $response = SkypeResponse::message(trans('texts.email_not_found', ['email' => $text]));
                     }
-                // user sent the scurity code
+                    // user sent the scurity code
                 } elseif ($state === BOT_STATE_GET_CODE) {
                     if ($this->validateCode($text, $botUserId)) {
                         $response = SkypeResponse::message(trans('texts.bot_welcome') . trans('texts.bot_help_message'));
@@ -67,14 +67,14 @@ class BotController extends Controller
                     } else {
                         $response = SkypeResponse::message(trans('texts.invalid_code'));
                     }
-                // regular chat message
+                    // regular chat message
                 } else {
                     if ($text === 'help') {
                         $response = SkypeResponse::message(trans('texts.bot_help_message'));
                     } elseif ($text == 'status') {
                         $response = SkypeResponse::message(trans('texts.intent_not_supported'));
                     } else {
-                        if (! $user = User::whereBotUserId($botUserId)->with('account')->first()) {
+                        if (!$user = User::whereBotUserId($botUserId)->with('account')->first()) {
                             return SkypeResponse::message(trans('texts.not_authorized'));
                         }
 
@@ -119,7 +119,7 @@ class BotController extends Controller
 
         if (Utils::isNinjaDev()) {
             // skip validation for testing
-        } elseif (! $this->validateToken($token)) {
+        } elseif (!$this->validateToken($token)) {
             return false;
         }
 
@@ -131,7 +131,8 @@ class BotController extends Controller
         $clientSecret = env('MSBOT_CLIENT_SECRET');
         $scope = 'https://graph.microsoft.com/.default';
 
-        $data = sprintf('grant_type=client_credentials&client_id=%s&client_secret=%s&scope=%s', $clientId, $clientSecret, $scope);
+        $data = sprintf('grant_type=client_credentials&client_id=%s&client_secret=%s&scope=%s', $clientId,
+            $clientSecret, $scope);
 
         $response = CurlUtils::post(MSBOT_LOGIN_URL, $data);
         $response = json_decode($response);
@@ -144,7 +145,8 @@ class BotController extends Controller
 
     private function loadState($token)
     {
-        $url = sprintf('%s/botstate/skype/conversations/%s', MSBOT_STATE_URL, '29:1C-OsU7OWBEDOYJhQUsDkYHmycOwOq9QOg5FVTwRX9ts');
+        $url = sprintf('%s/botstate/skype/conversations/%s', MSBOT_STATE_URL,
+            '29:1C-OsU7OWBEDOYJhQUsDkYHmycOwOq9QOg5FVTwRX9ts');
 
         $headers = [
             'Authorization: Bearer ' . $token,
@@ -172,7 +174,8 @@ class BotController extends Controller
 
     private function saveState($token, $data)
     {
-        $url = sprintf('%s/botstate/skype/conversations/%s', MSBOT_STATE_URL, '29:1C-OsU7OWBEDOYJhQUsDkYHmycOwOq9QOg5FVTwRX9ts');
+        $url = sprintf('%s/botstate/skype/conversations/%s', MSBOT_STATE_URL,
+            '29:1C-OsU7OWBEDOYJhQUsDkYHmycOwOq9QOg5FVTwRX9ts');
 
         $headers = [
             'Authorization: Bearer ' . $token,
@@ -203,24 +206,24 @@ class BotController extends Controller
 
     private function validateEmail($email, $botUserId)
     {
-        if (! $email || ! $botUserId) {
+        if (!$email || !$botUserId) {
             return false;
         }
 
         // delete any expired codes
         SecurityCode::whereBotUserId($botUserId)
-                    ->where('created_at', '<', DB::raw('now() - INTERVAL 10 MINUTE'))
-                    ->delete();
+            ->where('created_at', '<', DB::raw('now() - INTERVAL 10 MINUTE'))
+            ->delete();
 
         if (SecurityCode::whereBotUserId($botUserId)->first()) {
             return false;
         }
 
         $user = User::whereEmail($email)
-                    ->whereNull('bot_user_id')
-                    ->first();
+            ->whereNull('bot_user_id')
+            ->first();
 
-        if (! $user) {
+        if (!$user) {
             return false;
         }
 
@@ -238,20 +241,20 @@ class BotController extends Controller
 
     private function validateCode($input, $botUserId)
     {
-        if (! $input || ! $botUserId) {
+        if (!$input || !$botUserId) {
             return false;
         }
 
         $code = SecurityCode::whereBotUserId($botUserId)
-                    ->where('created_at', '>', DB::raw('now() - INTERVAL 10 MINUTE'))
-                    ->where('attempts', '<', 5)
-                    ->first();
+            ->where('created_at', '>', DB::raw('now() - INTERVAL 10 MINUTE'))
+            ->where('attempts', '<', 5)
+            ->first();
 
-        if (! $code) {
+        if (!$code) {
             return false;
         }
 
-        if (! hash_equals($code->code, $input)) {
+        if (!hash_equals($code->code, $input)) {
             $code->attempts += 1;
             $code->save();
 
@@ -274,7 +277,7 @@ class BotController extends Controller
 
     private function validateToken($token)
     {
-        if (! $token) {
+        if (!$token) {
             return false;
         }
 
@@ -304,7 +307,8 @@ class BotController extends Controller
             if ($value['kid'] == $headers_arr['kid']) {
 
                 // 5 get public key from key info
-                $cert_txt = '-----BEGIN CERTIFICATE-----' . "\n" . chunk_split($value['x5c'][0], 64) . '-----END CERTIFICATE-----';
+                $cert_txt = '-----BEGIN CERTIFICATE-----' . "\n" . chunk_split($value['x5c'][0],
+                        64) . '-----END CERTIFICATE-----';
                 $cert_obj = openssl_x509_read($cert_txt);
                 $pkey_obj = openssl_pkey_get_public($cert_obj);
                 $pkey_arr = openssl_pkey_get_details($pkey_obj);

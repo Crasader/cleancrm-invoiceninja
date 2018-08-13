@@ -23,7 +23,7 @@ class UpdateInvoiceAPIRequest extends InvoiceRequest
      */
     public function rules()
     {
-        if (! $this->entity()) {
+        if (!$this->entity()) {
             return [];
         }
 

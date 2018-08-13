@@ -17,7 +17,7 @@ class DatabaseLookup
 {
     public function handle(Request $request, Closure $next, $guard = 'user')
     {
-        if (! env('MULTI_DB_ENABLED')) {
+        if (!env('MULTI_DB_ENABLED')) {
             return $next($request);
         }
 
@@ -30,7 +30,7 @@ class DatabaseLookup
                 } else {
                     // do nothing
                 }
-            } elseif (! Auth::check() && $email = $request->email) {
+            } elseif (!Auth::check() && $email = $request->email) {
                 LookupUser::setServerByField('email', $email);
             } else {
                 Auth::logout();

@@ -20,8 +20,8 @@ class Authenticate
      * Handle an incoming request.
      *
      * @param \Illuminate\Http\Request $request
-     * @param \Closure                 $next
-     * @param string                   $guard
+     * @param \Closure $next
+     * @param string $guard
      *
      * @return mixed
      */
@@ -31,13 +31,13 @@ class Authenticate
         $invitationKey = $request->invitation_key ?: $request->proposal_invitation_key;
 
         if ($guard == 'client') {
-            if (! empty($request->invitation_key) || ! empty($request->proposal_invitation_key)) {
+            if (!empty($request->invitation_key) || !empty($request->proposal_invitation_key)) {
                 $contact_key = session('contact_key');
                 if ($contact_key) {
                     $contact = $this->getContact($contact_key);
-                    $invitation = $this->getInvitation($invitationKey, ! empty($request->proposal_invitation_key));
+                    $invitation = $this->getInvitation($invitationKey, !empty($request->proposal_invitation_key));
 
-                    if (! $invitation) {
+                    if (!$invitation) {
                         return response()->view('error', [
                             'error' => trans('texts.invoice_not_found'),
                             'hideHeader' => true,
@@ -53,7 +53,7 @@ class Authenticate
                 }
             }
 
-            if (! empty($request->contact_key)) {
+            if (!empty($request->contact_key)) {
                 $contact_key = $request->contact_key;
                 Session::put('contact_key', $contact_key);
             } else {
@@ -63,11 +63,11 @@ class Authenticate
             $contact = false;
             if ($contact_key) {
                 $contact = $this->getContact($contact_key);
-            } elseif ($invitation = $this->getInvitation($invitationKey, ! empty($request->proposal_invitation_key))) {
+            } elseif ($invitation = $this->getInvitation($invitationKey, !empty($request->proposal_invitation_key))) {
                 $contact = $invitation->contact;
                 Session::put('contact_key', $contact->contact_key);
             }
-            if (! $contact) {
+            if (!$contact) {
                 return \Redirect::to('client/session_expired');
             }
 
@@ -79,15 +79,16 @@ class Authenticate
             }
 
             // Does this account require portal passwords?
-            if ($account && (! $account->enable_portal_password || ! $account->hasFeature(FEATURE_CLIENT_PORTAL_PASSWORD))) {
+            if ($account && (!$account->enable_portal_password || !$account->hasFeature(FEATURE_CLIENT_PORTAL_PASSWORD))) {
                 $authenticated = true;
             }
 
-            if (! $authenticated && $contact && ! $contact->password) {
+            if (!$authenticated && $contact && !$contact->password) {
                 $authenticated = true;
             }
 
-            if (env('PHANTOMJS_SECRET') && $request->phantomjs_secret && hash_equals(env('PHANTOMJS_SECRET'), $request->phantomjs_secret)) {
+            if (env('PHANTOMJS_SECRET') && $request->phantomjs_secret && hash_equals(env('PHANTOMJS_SECRET'),
+                    $request->phantomjs_secret)) {
                 $authenticated = true;
             }
 
@@ -97,7 +98,7 @@ class Authenticate
             }
         }
 
-        if (! $authenticated) {
+        if (!$authenticated) {
             if ($request->ajax()) {
                 return response('Unauthorized.', 401);
             } else {
@@ -129,7 +130,7 @@ class Authenticate
      */
     protected function getInvitation($key, $isProposal = false)
     {
-        if (! $key) {
+        if (!$key) {
             return false;
         }
 
@@ -143,7 +144,7 @@ class Authenticate
             $invitation = Invitation::withTrashed()->where('invitation_key', '=', $key)->first();
         }
 
-        if ($invitation && ! $invitation->is_deleted) {
+        if ($invitation && !$invitation->is_deleted) {
             return $invitation;
         } else {
             return null;
@@ -158,7 +159,7 @@ class Authenticate
     protected function getContact($key)
     {
         $contact = Contact::withTrashed()->where('contact_key', '=', $key)->first();
-        if ($contact && ! $contact->is_deleted) {
+        if ($contact && !$contact->is_deleted) {
             return $contact;
         } else {
             return null;

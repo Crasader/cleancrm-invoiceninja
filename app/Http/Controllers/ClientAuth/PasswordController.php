@@ -19,8 +19,8 @@ class PasswordController extends Controller
      * If no token is present, display the link request form.
      *
      * @param \Illuminate\Http\Request $request
-     * @param string|null              $key
-     * @param string|null              $token
+     * @param string|null $key
+     * @param string|null $token
      *
      * @return \Illuminate\Http\Response
      */
@@ -31,11 +31,11 @@ class PasswordController extends Controller
         }
 
         $data = array(
-        	'token' => $token,
-			'clientauth' => true,
-		);
+            'token' => $token,
+            'clientauth' => true,
+        );
 
-        if (! session('contact_key')) {
+        if (!session('contact_key')) {
             return \Redirect::to('/client/session_expired');
         }
 
@@ -48,8 +48,8 @@ class PasswordController extends Controller
      * If no token is present, display the link request form.
      *
      * @param \Illuminate\Http\Request $request
-     * @param string|null              $key
-     * @param string|null              $token
+     * @param string|null $key
+     * @param string|null $token
      *
      * @return \Illuminate\Http\Response
      */
@@ -78,7 +78,7 @@ class PasswordController extends Controller
         $contactKey = session('contact_key');
         if ($contactKey) {
             $contact = Contact::where('contact_key', '=', $contactKey)->first();
-            if ($contact && ! $contact->is_deleted) {
+            if ($contact && !$contact->is_deleted) {
                 $credentials['id'] = $contact->id;
             }
         }

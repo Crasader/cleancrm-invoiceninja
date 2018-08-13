@@ -21,36 +21,6 @@ class Vendor extends EntityModel
     /**
      * @var string
      */
-    protected $presenter = 'App\Ninja\Presenters\VendorPresenter';
-    /**
-     * @var array
-     */
-    protected $dates = ['deleted_at'];
-    /**
-     * @var array
-     */
-    protected $fillable = [
-        'name',
-        'id_number',
-        'vat_number',
-        'work_phone',
-        'address1',
-        'address2',
-        'city',
-        'state',
-        'postal_code',
-        'country_id',
-        'private_notes',
-        'currency_id',
-        'website',
-        'transaction_name',
-        'custom_value1',
-        'custom_value2',
-    ];
-
-    /**
-     * @var string
-     */
     public static $fieldName = 'name';
     /**
      * @var string
@@ -84,6 +54,35 @@ class Vendor extends EntityModel
      * @var string
      */
     public static $fieldCountry = 'country';
+    /**
+     * @var string
+     */
+    protected $presenter = 'App\Ninja\Presenters\VendorPresenter';
+    /**
+     * @var array
+     */
+    protected $dates = ['deleted_at'];
+    /**
+     * @var array
+     */
+    protected $fillable = [
+        'name',
+        'id_number',
+        'vat_number',
+        'work_phone',
+        'address1',
+        'address2',
+        'city',
+        'state',
+        'postal_code',
+        'country_id',
+        'private_notes',
+        'currency_id',
+        'website',
+        'transaction_name',
+        'custom_value1',
+        'custom_value2',
+    ];
 
     /**
      * @return array
@@ -219,7 +218,7 @@ class Vendor extends EntityModel
     {
         $publicId = isset($data['public_id']) ? $data['public_id'] : (isset($data['id']) ? $data['id'] : false);
 
-        if (! $this->wasRecentlyCreated && $publicId && intval($publicId) > 0) {
+        if (!$this->wasRecentlyCreated && $publicId && intval($publicId) > 0) {
             $contact = VendorContact::scope($publicId)->whereVendorId($this->id)->firstOrFail();
         } else {
             $contact = VendorContact::createNew();
@@ -325,7 +324,7 @@ class Vendor extends EntityModel
             return $this->currency_id;
         }
 
-        if (! $this->account) {
+        if (!$this->account) {
             $this->load('account');
         }
 
@@ -338,12 +337,12 @@ class Vendor extends EntityModel
     public function getUnpaidExpenses()
     {
         return DB::table('expenses')
-                ->select('expense_currency_id', DB::raw('SUM(amount) as amount'))
-                ->whereVendorId($this->id)
-                ->whereIsDeleted(false)
-                ->whereNull('payment_date')
-                ->groupBy('expense_currency_id')
-                ->get();
+            ->select('expense_currency_id', DB::raw('SUM(amount) as amount'))
+            ->whereVendorId($this->id)
+            ->whereIsDeleted(false)
+            ->whereNull('payment_date')
+            ->groupBy('expense_currency_id')
+            ->get();
     }
 }
 

@@ -19,6 +19,14 @@ class Payment extends EntityModel
     use PresentableTrait;
     use SoftDeletes;
 
+    public static $statusClasses = [
+        PAYMENT_STATUS_PENDING => 'info',
+        PAYMENT_STATUS_COMPLETED => 'success',
+        PAYMENT_STATUS_FAILED => 'danger',
+        PAYMENT_STATUS_PARTIALLY_REFUNDED => 'primary',
+        PAYMENT_STATUS_VOIDED => 'default',
+        PAYMENT_STATUS_REFUNDED => 'default',
+    ];
     /**
      * @var array
      */
@@ -28,16 +36,6 @@ class Payment extends EntityModel
         'exchange_rate',
         'exchange_currency_id',
     ];
-
-    public static $statusClasses = [
-        PAYMENT_STATUS_PENDING => 'info',
-        PAYMENT_STATUS_COMPLETED => 'success',
-        PAYMENT_STATUS_FAILED => 'danger',
-        PAYMENT_STATUS_PARTIALLY_REFUNDED => 'primary',
-        PAYMENT_STATUS_VOIDED => 'default',
-        PAYMENT_STATUS_REFUNDED => 'default',
-    ];
-
     /**
      * @var array
      */
@@ -46,6 +44,22 @@ class Payment extends EntityModel
      * @var string
      */
     protected $presenter = 'App\Ninja\Presenters\PaymentPresenter';
+
+    public static function calcStatusLabel($statusId, $statusName, $amount)
+    {
+        if ($statusId == PAYMENT_STATUS_PARTIALLY_REFUNDED) {
+            return trans('texts.status_partially_refunded_amount', [
+                'amount' => $amount,
+            ]);
+        } else {
+            return trans('texts.status_' . strtolower($statusName));
+        }
+    }
+
+    public static function calcStatusClass($statusId)
+    {
+        return static::$statusClasses[$statusId];
+    }
 
     /**
      * @return mixed
@@ -119,6 +133,13 @@ class Payment extends EntityModel
         return $this->belongsTo('App\Models\PaymentMethod');
     }
 
+    /*
+    public function getAmount()
+    {
+        return Utils::formatMoney($this->amount, $this->client->getCurrencyId());
+    }
+    */
+
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
@@ -134,13 +155,6 @@ class Payment extends EntityModel
     {
         return "/payments/{$this->public_id}/edit";
     }
-
-    /*
-    public function getAmount()
-    {
-        return Utils::formatMoney($this->amount, $this->client->getCurrencyId());
-    }
-    */
 
     public function scopeExcludeFailed($query)
     {
@@ -231,7 +245,7 @@ class Payment extends EntityModel
             return false;
         }
 
-        if (! $amount) {
+        if (!$amount) {
             $amount = $this->amount;
         }
 
@@ -319,7 +333,7 @@ class Payment extends EntityModel
      */
     public function getBankDataAttribute()
     {
-        if (! $this->routing_number) {
+        if (!$this->routing_number) {
             return null;
         }
 
@@ -351,22 +365,6 @@ class Payment extends EntityModel
         return $value ? str_pad($value, 4, '0', STR_PAD_LEFT) : null;
     }
 
-    public static function calcStatusLabel($statusId, $statusName, $amount)
-    {
-        if ($statusId == PAYMENT_STATUS_PARTIALLY_REFUNDED) {
-            return trans('texts.status_partially_refunded_amount', [
-                'amount' => $amount,
-            ]);
-        } else {
-            return trans('texts.status_' . strtolower($statusName));
-        }
-    }
-
-    public static function calcStatusClass($statusId)
-    {
-        return static::$statusClasses[$statusId];
-    }
-
     public function statusClass()
     {
         return static::calcStatusClass($this->payment_status_id);
@@ -382,9 +380,9 @@ class Payment extends EntityModel
     public function invoiceJsonBackup()
     {
         $activity = Activity::wherePaymentId($this->id)
-                        ->whereActivityTypeId(ACTIVITY_TYPE_CREATE_PAYMENT)
-                        ->get(['json_backup'])
-                        ->first();
+            ->whereActivityTypeId(ACTIVITY_TYPE_CREATE_PAYMENT)
+            ->get(['json_backup'])
+            ->first();
 
         return $activity->json_backup;
     }

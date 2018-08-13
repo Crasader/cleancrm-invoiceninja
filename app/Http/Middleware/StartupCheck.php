@@ -40,23 +40,23 @@ class StartupCheck
         if (isset($_ENV['TRUSTED_PROXIES'])) {
             if (env('TRUSTED_PROXIES') == '*') {
                 $request->setTrustedProxies(['127.0.0.1', $request->server->get('REMOTE_ADDR')]);
-            } else{
+            } else {
                 $request->setTrustedProxies(array_map('trim', explode(',', env('TRUSTED_PROXIES'))));
             }
         }
 
         // Ensure all request are over HTTPS in production
-        if (Utils::requireHTTPS() && ! $request->secure()) {
+        if (Utils::requireHTTPS() && !$request->secure()) {
             return Redirect::secure($request->path());
         }
 
         // If the database doens't yet exist we'll skip the rest
-        if (! Utils::isNinja() && ! Utils::isDatabaseSetup()) {
+        if (!Utils::isNinja() && !Utils::isDatabaseSetup()) {
             return $next($request);
         }
 
         // Check to prevent headless browsers from triggering activity
-        if (Utils::isNinja() && ! $request->phantomjs && strpos($request->header('User-Agent'), 'Headless') !== false) {
+        if (Utils::isNinja() && !$request->phantomjs && strpos($request->header('User-Agent'), 'Headless') !== false) {
             abort(403);
         }
 
@@ -120,12 +120,13 @@ class StartupCheck
             }
 
             // Check the application is up to date and for any news feed messages
-            if (isset($_SERVER['REQUEST_URI']) && ! Utils::startsWith($_SERVER['REQUEST_URI'], '/news_feed') && ! Session::has('news_feed_id')) {
+            if (isset($_SERVER['REQUEST_URI']) && !Utils::startsWith($_SERVER['REQUEST_URI'],
+                    '/news_feed') && !Session::has('news_feed_id')) {
                 $data = false;
                 if (Utils::isNinja()) {
                     $data = Utils::getNewsFeedResponse();
                 } else {
-                    $file = @CurlUtils::get(NINJA_APP_URL.'/news_feed/'.Utils::getUserType().'/'.NINJA_VERSION);
+                    $file = @CurlUtils::get(NINJA_APP_URL . '/news_feed/' . Utils::getUserType() . '/' . NINJA_VERSION);
                     $data = @json_decode($file);
                 }
                 if ($data) {
@@ -170,14 +171,14 @@ class StartupCheck
         }
 
         // Make sure the account/user localization settings are in the session
-        if (Auth::check() && ! Session::has(SESSION_TIMEZONE)) {
+        if (Auth::check() && !Session::has(SESSION_TIMEZONE)) {
             Event::fire(new UserLoggedIn());
         }
 
         // Check if the user is claiming a license (ie, additional invoices, white label, etc.)
-        if (! Utils::isNinjaProd() && isset($_SERVER['REQUEST_URI'])) {
+        if (!Utils::isNinjaProd() && isset($_SERVER['REQUEST_URI'])) {
             $claimingLicense = Utils::startsWith($_SERVER['REQUEST_URI'], '/claim_license');
-            if (! $claimingLicense && Input::has('license_key') && Input::has('product_id')) {
+            if (!$claimingLicense && Input::has('license_key') && Input::has('product_id')) {
                 $licenseKey = Input::get('license_key');
                 $productId = Input::get('product_id');
 
@@ -211,9 +212,9 @@ class StartupCheck
             Session::flash('message', 'Cache cleared');
         }
         foreach ($cachedTables as $name => $class) {
-            if (Input::has('clear_cache') || ! Cache::has($name)) {
+            if (Input::has('clear_cache') || !Cache::has($name)) {
                 // check that the table exists in case the migration is pending
-                if (! Schema::hasTable((new $class())->getTable())) {
+                if (!Schema::hasTable((new $class())->getTable())) {
                     continue;
                 }
                 if ($name == 'paymentTerms') {
@@ -234,7 +235,8 @@ class StartupCheck
 
         // Show message to IE 8 and before users
         if (isset($_SERVER['HTTP_USER_AGENT']) && preg_match('/(?i)msie [2-8]/', $_SERVER['HTTP_USER_AGENT'])) {
-            Session::flash('error', trans('texts.old_browser', ['link' => link_to(OUTDATE_BROWSER_URL, trans('texts.newer_browser'), ['target' => '_blank'])]));
+            Session::flash('error', trans('texts.old_browser',
+                ['link' => link_to(OUTDATE_BROWSER_URL, trans('texts.newer_browser'), ['target' => '_blank'])]));
         }
 
         $response = $next($request);

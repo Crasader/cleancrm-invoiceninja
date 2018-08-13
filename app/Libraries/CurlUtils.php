@@ -45,7 +45,7 @@ class CurlUtils
 
     public static function phantom($method, $url)
     {
-        if (! $path = env('PHANTOMJS_BIN_PATH')) {
+        if (!$path = env('PHANTOMJS_BIN_PATH')) {
             return false;
         }
 
@@ -70,7 +70,7 @@ class CurlUtils
 
     public static function renderPDF($url, $filename)
     {
-        if (! $path = env('PHANTOMJS_BIN_PATH')) {
+        if (!$path = env('PHANTOMJS_BIN_PATH')) {
             return false;
         }
 

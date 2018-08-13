@@ -20,8 +20,11 @@ class PaymentApiController extends BaseAPIController
 
     protected $entityType = ENTITY_PAYMENT;
 
-    public function __construct(PaymentRepository $paymentRepo, PaymentService $paymentService, ContactMailer $contactMailer)
-    {
+    public function __construct(
+        PaymentRepository $paymentRepo,
+        PaymentService $paymentService,
+        ContactMailer $contactMailer
+    ) {
         parent::__construct();
 
         $this->paymentRepo = $paymentRepo;
@@ -49,9 +52,9 @@ class PaymentApiController extends BaseAPIController
     public function index()
     {
         $payments = Payment::scope()
-                        ->withTrashed()
-                        ->with(['invoice'])
-                        ->orderBy('created_at', 'desc');
+            ->withTrashed()
+            ->with(['invoice'])
+            ->orderBy('created_at', 'desc');
 
         return $this->listResponse($payments);
     }

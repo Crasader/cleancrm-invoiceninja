@@ -16,7 +16,7 @@ class TimeTrackerController extends Controller
         $user = auth()->user();
         $account = $user->account;
 
-        if (! $account->hasFeature(FEATURE_TASKS)) {
+        if (!$account->hasFeature(FEATURE_TASKS)) {
             return trans('texts.tasks_not_enabled');
         }
 
